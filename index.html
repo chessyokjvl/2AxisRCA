@@ -33,23 +33,28 @@
   
   /* Severity Logic */
   .checkbox-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-  .sev-btn { padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; background: white; } 
-  .sev-btn.active { border-color: #f59e0b; background: #fef3c7; color: #b45309; }
+  .sev-btn { padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; background: white; transition: 0.2s; } 
+  .sev-btn.active { border-color: #f59e0b; background: #fef3c7; color: #b45309; transform: scale(1.05); }
 
-  /* Dashboard */
+  /* Dashboard & Filters */
   .filter-bar { background: #e0e7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
   .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
   .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; border-bottom: 4px solid #3b82f6; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
   .stat-card.green { border-bottom-color: #10b981; } .stat-card.orange { border-bottom-color: #f59e0b; } .stat-card.purple { border-bottom-color: #8b5cf6; }
-  .stat-num { font-size: 28px; font-weight: bold; color: #1e40af; margin-top: 10px; } .stat-sub { font-size: 12px; color: #6b7280; }
+  .stat-num { font-size: 28px; font-weight: bold; color: #1e40af; margin-top: 10px; } .stat-sub { font-size: 12px; color: #6b7280; font-weight:bold; }
 
   /* Tables */
   table { width: 100%; border-collapse: collapse; min-width: 800px; }
   th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 14px;}
-  th { background-color: #f9fafb; font-weight: 600; color: #4b5563; }
-  tr:hover { background-color: #f3f4f6; }
+  th { background-color: #f9fafb; font-weight: 600; color: #4b5563; user-select: none; }
+  th.sortable:hover { background-color: #e5e7eb; }
+  tr.main-row:hover { background-color: #f3f4f6; }
   .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-  .bg-green { background: #dcfce7; color: #166534; } .bg-yellow { background: #fef9c3; color: #854d0e; }
+  .bg-green { background: #dcfce7; color: #166534; } .bg-yellow { background: #fef9c3; color: #854d0e; } .bg-red { background: #fee2e2; color: #991b1b; }
+  
+  .nested-table { background: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow:hidden;}
+  .nested-table th { background: #e0e7ff; font-size: 12px; padding: 8px; }
+  .nested-table td { font-size: 13px; padding: 8px; }
 
   /* RCA Form & Flow UI */
   .flow-item { border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 16px 0; background: #eff6ff; }
@@ -90,13 +95,12 @@
   <div class="sidebar" id="sidebar">
     <div class="menu-item active" onclick="switchView('dashboardView', this)">📊 Dashboard</div>
     <div class="menu-item" onclick="switchView('incidentListView', this)">📋 ทะเบียนอุบัติการณ์ทั้งหมด</div>
-    <div class="menu-item" onclick="switchView('barrierListView', this)">🚧 ติดตามด่านกั้นที่ล้มเหลว</div>
     <div class="menu-item" onclick="switchView('formView', this)" id="menuRCA">📝 ทำการวิเคราะห์ RCA</div>
     
     <div id="adminMenus" class="hidden">
       <div class="menu-item menu-admin" style="margin-top: 15px; cursor: default;">ส่วนจัดการ (Admin Only)</div>
       <div class="menu-item menu-admin" onclick="switchView('adminIncidentView', this)">➕ ลงทะเบียนอุบัติการณ์ใหม่</div>
-      <div class="menu-item menu-admin" onclick="switchView('adminDeptView', this)">🏢 เพิ่มรายชื่อหน่วยงาน</div>
+      <div class="menu-item menu-admin" onclick="switchView('adminDeptView', this)">🏢 จัดการหน่วยงาน</div>
     </div>
   </div>
 
@@ -113,37 +117,44 @@
       
       <div class="dashboard-grid">
         <div class="stat-card"><div style="color:gray;font-weight:bold;">อุบัติการณ์ E-I (เรื่อง)</div><div class="stat-num" id="dInc">0</div></div>
-        <div class="stat-card green"><div style="color:gray;font-weight:bold;">ความสำเร็จทำ RCA</div><div class="stat-num" style="color:#10b981;" id="dPct">0%</div><div class="stat-sub" id="dSubRCA">0 จาก 0 เรื่อง</div></div>
+        <div class="stat-card green"><div style="color:gray;font-weight:bold;">ความสำเร็จทำ RCA</div><div class="stat-num" style="color:#10b981;" id="dPct">0%</div><div class="stat-sub" id="dSubRCA">ทำแล้ว 0 จาก 0 เรื่อง</div></div>
         <div class="stat-card orange"><div style="color:gray;font-weight:bold;">ความรวดเร็วเฉลี่ย</div><div class="stat-num" style="color:#f59e0b;" id="dSpd">0 วัน</div><div class="stat-sub">Time-to-RCA</div></div>
-        <div class="stat-card purple"><div style="color:gray;font-weight:bold;">ด่านกั้นที่แก้ไขแล้ว</div><div class="stat-num" style="color:#8b5cf6;" id="dFac">0</div><div class="stat-sub">จากด่านกั้นล้มเหลวทั้งหมด</div></div>
+        <div class="stat-card purple"><div style="color:gray;font-weight:bold;">ด่านกั้นที่แก้ไขแล้ว</div><div class="stat-num" style="color:#8b5cf6;" id="dFac">0%</div><div class="stat-sub" id="dSubFac">0 จาก 0 รายการ</div></div>
       </div>
       <div class="grid-2">
-        <div class="card"><h3>สัดส่วนความรุนแรง (E-I)</h3><canvas id="sevChart"></canvas></div>
-        <div class="card"><h3>สัดส่วนสถานะการทำ RCA</h3><canvas id="statusChart"></canvas></div>
+        <div class="card"><h3>สถานะการทำ RCA</h3><canvas id="statusChart"></canvas></div>
+        <div class="card" style="max-height: 400px; overflow-y:auto;">
+          <h3 style="text-align: center; color: #4b5563;">หน่วยงานเจ้าของอุบัติการณ์</h3>
+          <table style="min-width:100%;">
+            <thead><tr><th>หน่วยงาน</th><th style="text-align:center;">จำนวน (เรื่อง)</th></tr></thead>
+            <tbody id="deptDashTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <div id="incidentListView" class="hidden">
       <div class="card">
         <h1>ทะเบียนอุบัติการณ์ทั้งหมด</h1>
-        <div class="filter-bar" style="padding: 10px; background: transparent; border: 1px solid #ddd;">
-          <div><select id="fltIncStatus" onchange="renderIncidentTable()"><option value="all">ทุกสถานะ</option><option value="รอทำ RCA">รอทำ RCA</option><option value="ทำ RCA แล้ว">ทำ RCA แล้ว</option></select></div>
-          <div><input type="text" id="fltIncSearch" placeholder="ค้นหาเลขที่/รายการ..." onkeyup="renderIncidentTable()"></div>
+        <div class="filter-bar" style="padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; gap: 15px;">
+          <div style="flex:1;"><label>ปีงบประมาณ</label><select id="fltIncFY" onchange="renderIncidentTable()"></select></div>
+          <div style="flex:1;"><label>หน่วยงาน</label><select id="fltIncDept" placeholder="ค้นหาหน่วยงาน..."></select></div>
+          <div style="flex:1;"><label>สถานะ</label><select id="fltIncStatus" onchange="renderIncidentTable()"><option value="all">ทุกสถานะ</option><option value="รอทำ RCA">รอทำ RCA</option><option value="ทำ RCA แล้ว">ทำ RCA แล้ว</option></select></div>
+          <div style="flex:2;"><label>ค้นหา (เลขที่/รายการ)</label><input type="text" id="fltIncSearch" placeholder="พิมพ์คำค้นหา..." onkeyup="renderIncidentTable()"></div>
         </div>
         <table id="incTable">
-          <thead><tr><th>วันที่เกิดเหตุ</th><th>เลขที่</th><th>รายการความเสี่ยง</th><th>ความรุนแรง</th><th>หน่วยงาน</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="barrierListView" class="hidden">
-      <div class="card">
-        <h1>ติดตามด่านกั้นที่ล้มเหลว (Failed Barriers)</h1>
-        <table id="barrierTable">
-          <thead><tr><th>เลขที่อุบัติการณ์</th><th>ด่านกั้นที่ล้มเหลว</th><th>สถานะการแก้ไข</th><th>ผลลัพธ์/วิธีการแก้ไข</th><th>บันทึก</th></tr></thead>
-          <tbody></tbody>
-        </table>
+          <thead>
+            <tr>
+              <th class="sortable" onclick="sortIncTable('date')" style="cursor:pointer; width:120px;">วันที่เกิดเหตุ <span id="sort_date">▼</span></th>
+              <th class="sortable" onclick="sortIncTable('no')" style="cursor:pointer; width:120px;">เลขที่ <span id="sort_no"></span></th>
+              <th>รายการความเสี่ยง</th>
+              <th class="sortable" onclick="sortIncTable('severity')" style="cursor:pointer; width:100px;">ความรุนแรง <span id="sort_severity"></span></th>
+              <th class="sortable" onclick="sortIncTable('dept')" style="cursor:pointer; width:150px;">หน่วยงาน <span id="sort_dept"></span></th>
+              <th class="sortable" onclick="sortIncTable('status')" style="cursor:pointer; width:120px;">สถานะ <span id="sort_status"></span></th>
+              <th style="width:250px; text-align:center;">จัดการ</th>
+            </tr>
+          </thead>
+          </table>
       </div>
     </div>
 
@@ -195,9 +206,15 @@
 
     <div id="adminDeptView" class="hidden">
       <div class="card">
-        <h1>เพิ่มรายชื่อหน่วยงาน (Admin)</h1>
-        <div class="form-group"><label>ชื่อหน่วยงานใหม่</label><input type="text" id="newDeptName"></div>
-        <button class="btn btn-primary" onclick="saveNewDepartment()">เพิ่มหน่วยงาน</button>
+        <h1>จัดการหน่วยงาน (Admin)</h1>
+        <div class="form-group"><label>เพิ่มรายชื่อหน่วยงานใหม่</label><input type="text" id="newDeptName" placeholder="ระบุชื่อหน่วยงาน..."></div>
+        <button class="btn btn-primary" onclick="saveNewDepartment()">➕ เพิ่มหน่วยงาน</button>
+        <hr style="margin: 20px 0; border: 1px solid #e5e7eb;">
+        <h3>รายชื่อหน่วยงานทั้งหมด</h3>
+        <table id="deptTable">
+          <thead><tr><th>ชื่อหน่วยงาน</th><th style="width:150px; text-align:center;">จัดการ</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
 
@@ -209,18 +226,17 @@
 
 <script>
 // ================= GLOBAL VARIABLES =================
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_mOalqrEu8C3RU3Z88gla5G2aW7kjYnH2bzzlMVLAkXHUPfWvUKQlMbf1frS1Bla2/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxeaBPmuYTn2B_E3HJoAmse64oTmqNwCGr2iCrXgDgFV4Uiy3h0tWEGVkfasdxfPsTS/exec";
 let currentUser = null, userRole = null;
 let db = { depts:[], incidents:[], rcas:[], barriers:[] }; 
 var data = { flows: [], rcaInfo: { severityLevel: '' } };
-let chartSev, chartStatus;
+let chartStatus;
 
-// State Variables for Editing
-let editingFlowIdx = -1;
-let editingAct = { fIdx: -1, aIdx: -1 };
+// Sorting
+let incSortCol = 'date', incSortAsc = false;
+let editingFlowIdx = -1, editingAct = { fIdx: -1, aIdx: -1 };
 
-// Tom Select Instances
-let tsIncident, tsAdminDept, tsFilterDept, tsPartDept;
+let tsIncident, tsAdminDept, tsFilterDept, tsPartDept, tsFltIncDept;
 
 // DATABASE 
 var rcaDatabase = {
@@ -283,25 +299,25 @@ function initTomSelects() {
   tsAdminDept = new TomSelect("#newIncDept", {create: false});
   tsFilterDept = new TomSelect("#filterDept", {create: false});
   tsPartDept = new TomSelect("#participatingDepts", { plugins: ['remove_button'] });
+  tsFltIncDept = new TomSelect("#fltIncDept", {create: false, onChange: renderIncidentTable});
 }
 
 function generateFYOptions() {
   let y = new Date().getFullYear(); let h = '<option value="all">ทุกปีงบประมาณ</option>';
   for(let i=-2; i<=1; i++) h += `<option value="${y+i+543}">ปีงบฯ ${y+i+543}</option>`;
   document.getElementById('filterFY').innerHTML = h;
+  document.getElementById('fltIncFY').innerHTML = h;
 }
 
 function renderSeverityButtons() {
-  let html = '';
-  ['E','F','G','H','I'].forEach(lvl => { html += `<div class="sev-btn" id="sev${lvl}" onclick="selectSeverity('${lvl}')">${lvl}</div>`; });
+  let html = ''; ['E','F','G','H','I'].forEach(lvl => { html += `<div class="sev-btn" id="sev${lvl}" onclick="selectSeverity('${lvl}')">${lvl}</div>`; });
   document.getElementById('severityLevel').innerHTML = html;
 }
 
 function selectSeverity(level) {
   if(!level) return;
   document.querySelectorAll('.sev-btn').forEach(el => el.classList.remove('active'));
-  let btn = document.getElementById('sev' + level);
-  if (btn) btn.classList.add('active');
+  let btn = document.getElementById('sev' + level); if (btn) btn.classList.add('active');
   data.rcaInfo.severityLevel = level;
 }
 
@@ -312,23 +328,21 @@ async function fetchAllData() {
     const result = await res.json();
     if(result.status === 'success') {
       db = result;
-      // Update Dropdowns
-      tsAdminDept.clearOptions(); tsFilterDept.clearOptions(); tsIncident.clearOptions(); tsPartDept.clearOptions();
-      tsFilterDept.addOption({value: 'all', text: 'ทุกหน่วยงาน'});
+      tsAdminDept.clearOptions(); tsFilterDept.clearOptions(); tsIncident.clearOptions(); tsPartDept.clearOptions(); tsFltIncDept.clearOptions();
+      tsFilterDept.addOption({value: 'all', text: 'ทุกหน่วยงาน'}); tsFltIncDept.addOption({value: 'all', text: 'ทุกหน่วยงาน'}); tsFltIncDept.setValue('all');
       
       db.depts.forEach(d => { 
-        tsAdminDept.addOption({value:d,text:d}); 
-        tsFilterDept.addOption({value:d,text:d}); 
-        tsPartDept.addOption({value:d,text:d}); 
+        tsAdminDept.addOption({value:d,text:d}); tsFilterDept.addOption({value:d,text:d}); 
+        tsPartDept.addOption({value:d,text:d}); tsFltIncDept.addOption({value:d,text:d});
       });
       
       db.incidents.filter(inc => inc.status === 'รอทำ RCA').forEach(inc => {
         tsIncident.addOption({ no: inc.no, label: `${inc.no} : ${inc.desc}` });
       });
 
-      renderDashboard(); renderIncidentTable(); renderBarrierTable();
-    } else { alert("เกิดข้อผิดพลาดในการดึงข้อมูล: " + result.message); }
-  } catch(e) { console.error(e); alert("การเชื่อมต่อฐานข้อมูลล้มเหลว กรุณาตรวจสอบ URL"); }
+      renderDashboard(); renderIncidentTable(); renderManageDeptTable();
+    } else alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
+  } catch(e) { console.error(e); alert("เชื่อมต่อล้มเหลว"); }
 }
 
 function autoFillIncidentData(no) {
@@ -339,8 +353,7 @@ function autoFillIncidentData(no) {
   }
   const inc = db.incidents.find(x => String(x.no) === String(no));
   if(inc) {
-    document.getElementById('rcaIncNo').value = inc.no; document.getElementById('rcaDesc').value = inc.desc;
-    document.getElementById('rcaDept').value = inc.dept;
+    document.getElementById('rcaIncNo').value = inc.no; document.getElementById('rcaDesc').value = inc.desc; document.getElementById('rcaDept').value = inc.dept;
     if(inc.date) {
       let d = new Date(inc.date);
       if(!isNaN(d.getTime())) document.getElementById('rcaDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -355,56 +368,104 @@ function switchView(id, el) {
   document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active')); el.classList.add('active');
   if(window.innerWidth <= 768) toggleSidebar();
   if(id === 'dashboardView') renderDashboard();
+  if(id === 'incidentListView') renderIncidentTable();
+  if(id === 'adminDeptView') renderManageDeptTable();
 }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-function renderIncidentTable() {
-  let statFilter = document.getElementById('fltIncStatus').value;
-  let search = document.getElementById('fltIncSearch').value.toLowerCase();
-  let html = '';
-  db.incidents.filter(inc => ['E','F','G','H','I'].includes(inc.severity.trim())).forEach(inc => {
-    if(statFilter !== 'all' && inc.status !== statFilter) return;
-    if(search && !inc.no.toLowerCase().includes(search) && !inc.desc.toLowerCase().includes(search)) return;
-    
-    let badge = inc.status === 'รอทำ RCA' ? 'bg-yellow' : 'bg-green';
-    let dStr = new Date(inc.date).toLocaleDateString('th-TH');
-    
-    let btnRCA = inc.status === 'รอทำ RCA' ? `<button class="btn btn-sm btn-primary" onclick="goToRCA('${inc.no}')">ทำ RCA</button>` : `<button class="btn btn-sm" disabled style="background:#d1d5db;color:black;">ทำ RCA แล้ว</button>`;
-    let btnDel = userRole === 'Admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteIncident('${inc.no}', '${inc.status}')">ลบ</button>` : '';
-    html += `<tr><td>${dStr}</td><td>${inc.no}</td><td>${inc.desc}</td><td>${inc.severity}</td><td>${inc.dept}</td><td><span class="badge ${badge}">${inc.status}</span></td><td>${btnRCA} ${btnDel}</td></tr>`;
-  });
-  document.querySelector('#incTable tbody').innerHTML = html;
+// Sort Incident Table
+function sortIncTable(col) {
+  if(incSortCol === col) incSortAsc = !incSortAsc; else { incSortCol = col; incSortAsc = true; }
+  ['date', 'no', 'severity', 'dept', 'status'].forEach(c => document.getElementById('sort_' + c).innerHTML = '');
+  document.getElementById('sort_' + col).innerHTML = incSortAsc ? ' ▲' : ' ▼';
+  renderIncidentTable();
 }
 
-function renderBarrierTable() {
-  let html = '';
-  db.barriers.forEach((b, idx) => {
-    let selY = b.status === 'แก้ไขแล้ว' ? 'selected' : '';
-    let bg = b.status === 'แก้ไขแล้ว' ? 'background:#dcfce7;' : '';
-    let disabled = !currentUser ? 'disabled' : '';
-    html += `<tr style="${bg}"><td><strong>${b.incNo}</strong></td><td>${b.barrier}</td>
-      <td><select id="bStat_${idx}" ${disabled}><option value="ยังไม่แก้ไข">ยังไม่แก้ไข</option><option value="แก้ไขแล้ว" ${selY}>แก้ไขแล้ว</option></select></td>
-      <td><input type="text" id="bOut_${idx}" value="${b.action||''}" ${disabled} placeholder="ระบุผลลัพธ์..."></td>
-      <td><button class="btn btn-sm btn-success" id="bBtn_${idx}" ${disabled} onclick="updateBarrier(${idx}, '${b.incNo}', '${b.barrier.replace(/'/g, "\\'")}')">บันทึก</button></td></tr>`;
+function toggleBarrierRow(incNo) {
+  let row = document.getElementById('brow_' + incNo);
+  if(row.classList.contains('hidden')) row.classList.remove('hidden'); else row.classList.add('hidden');
+}
+
+function filterNestedBarriers(incNo, stat) {
+  let rows = document.querySelectorAll(`.nest-row-${incNo}`);
+  rows.forEach(r => {
+    if(stat === 'all') r.style.display = '';
+    else if(r.getAttribute('data-status') === stat) r.style.display = '';
+    else r.style.display = 'none';
   });
-  document.querySelector('#barrierTable tbody').innerHTML = html;
+}
+
+function renderIncidentTable() {
+  let statFilter = document.getElementById('fltIncStatus').value; let search = document.getElementById('fltIncSearch').value.toLowerCase();
+  let deptFilter = tsFltIncDept ? tsFltIncDept.getValue() : 'all'; let fyFilter = document.getElementById('fltIncFY').value;
+  
+  let filtered = db.incidents.filter(inc => ['E','F','G','H','I'].includes(inc.severity.trim()));
+  
+  filtered = filtered.filter(inc => {
+    let matchStat = (statFilter === 'all') || (inc.status === statFilter);
+    let matchSearch = (!search) || (inc.no.toLowerCase().includes(search) || inc.desc.toLowerCase().includes(search));
+    let matchDept = (deptFilter === 'all') || (inc.dept === deptFilter);
+    let d = new Date(inc.date); let fy = (d.getMonth() + 1 >= 10) ? d.getFullYear() + 1 + 543 : d.getFullYear() + 543;
+    let matchFY = (fyFilter === 'all') || (fy.toString() === fyFilter);
+    return matchStat && matchSearch && matchDept && matchFY;
+  });
+
+  filtered.sort((a, b) => {
+    let valA = a[incSortCol], valB = b[incSortCol];
+    if(incSortCol === 'date') { valA = new Date(a.date).getTime(); valB = new Date(b.date).getTime(); }
+    if(valA < valB) return incSortAsc ? -1 : 1;
+    if(valA > valB) return incSortAsc ? 1 : -1;
+    return 0;
+  });
+
+  let tBody = document.querySelector('#incTable tbody'); tBody.innerHTML = '';
+  filtered.forEach(inc => {
+    let badge = inc.status === 'รอทำ RCA' ? 'bg-red' : 'bg-green';
+    let dStr = new Date(inc.date).toLocaleDateString('th-TH');
+    
+    let btnDelInc = userRole === 'Admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteIncident('${inc.no}', 'Inc')">ลบอุบัติการณ์</button>` : '';
+    let btnDelRca = userRole === 'Admin' && inc.status === 'ทำ RCA แล้ว' ? `<button class="btn btn-sm" style="background:#f43f5e;color:white;" onclick="deleteIncident('${inc.no}', 'RCA')">ลบ RCA</button>` : '';
+    let btnRCA = inc.status === 'รอทำ RCA' ? `<button class="btn btn-sm btn-primary" onclick="goToRCA('${inc.no}')">ทำ RCA</button>` : `<button class="btn btn-sm" disabled style="background:#d1d5db;color:black;">วิเคราะห์แล้ว</button>`;
+    
+    let incBars = db.barriers.filter(b => b.incNo === inc.no);
+    let btnToggleBar = inc.status === 'ทำ RCA แล้ว' ? `<button class="btn btn-sm btn-purple" onclick="toggleBarrierRow('${inc.no}')">ด่านกั้น (${incBars.length})</button>` : '';
+
+    let html = `<tr class="main-row"><td>${dStr}</td><td>${inc.no}</td><td>${inc.desc}</td><td>${inc.severity}</td><td>${inc.dept}</td><td><span class="badge ${badge}">${inc.status}</span></td><td style="text-align:center;">${btnRCA} ${btnToggleBar} ${btnDelRca} ${btnDelInc}</td></tr>`;
+    
+    // Nested Barriers
+    if(inc.status === 'ทำ RCA แล้ว' && incBars.length > 0) {
+      let bRows = '';
+      incBars.forEach((b, idx) => {
+        let selY = b.status === 'แก้ไขแล้ว' ? 'selected' : '';
+        let disabled = !currentUser ? 'disabled' : '';
+        bRows += `<tr class="nest-row-${inc.no}" data-status="${b.status}"><td>${b.barrier}</td><td><select id="nbStat_${inc.no}_${idx}" ${disabled}><option value="ยังไม่แก้ไข">ยังไม่แก้ไข</option><option value="แก้ไขแล้ว" ${selY}>แก้ไขแล้ว</option></select></td><td><input type="text" id="nbOut_${inc.no}_${idx}" value="${b.action||''}" ${disabled}></td><td><button class="btn btn-sm btn-success" ${disabled} onclick="updateBarrierNest('${inc.no}', '${b.barrier.replace(/'/g, "\\'")}', ${idx})">บันทึก</button></td></tr>`;
+      });
+      html += `<tr id="brow_${inc.no}" class="hidden" style="background:#f8fafc;"><td colspan="7" style="padding:15px;">
+        <div class="nested-table"><div style="display:flex; justify-content:space-between; align-items:center; background:#e0e7ff; padding:10px;"><strong>รายการด่านกั้นที่ล้มเหลว</strong><select onchange="filterNestedBarriers('${inc.no}', this.value)" style="width:150px; padding:5px;"><option value="all">ทั้งหมด</option><option value="แก้ไขแล้ว">แก้ไขแล้ว</option><option value="ยังไม่แก้ไข">ยังไม่แก้ไข</option></select></div>
+        <table style="min-width:100%;"><thead><tr><th>ชื่อด่านกั้น</th><th style="width:150px;">สถานะ</th><th>ผลลัพธ์/การแก้ไข</th><th style="width:80px;">อัปเดต</th></tr></thead><tbody>${bRows}</tbody></table></div></td></tr>`;
+    }
+    tBody.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+function renderManageDeptTable() {
+  let h = '';
+  db.depts.forEach(d => {
+    h += `<tr><td>${d}</td><td style="text-align:center;"><button class="btn btn-sm btn-warning" onclick="editDept('${d}')">แก้ไข</button> <button class="btn btn-sm btn-danger" onclick="delDept('${d}')">ลบ</button></td></tr>`;
+  });
+  document.querySelector('#deptTable tbody').innerHTML = h;
 }
 
 function renderDashboard() {
-  let fDept = document.getElementById('filterDept').value;
-  let fFY = document.getElementById('filterFY').value;
+  let fDept = document.getElementById('filterDept').value; let fFY = document.getElementById('filterFY').value;
   let fStart = document.getElementById('filterStart').value ? new Date(document.getElementById('filterStart').value) : null;
   let fEnd = document.getElementById('filterEnd').value ? new Date(document.getElementById('filterEnd').value) : null;
   
   let validInc = db.incidents.filter(inc => ['E','F','G','H','I'].includes(inc.severity.trim()));
   validInc = validInc.filter(inc => {
-    let d = new Date(inc.date);
-    let fy = (d.getMonth() + 1 >= 10) ? d.getFullYear() + 1 + 543 : d.getFullYear() + 543;
-    let matchDept = (fDept === 'all') || (inc.dept === fDept);
-    let matchFY = (fFY === 'all') || (fy.toString() === fFY);
-    let matchDate = true;
-    if(fStart && d < fStart) matchDate = false;
-    if(fEnd && d > fEnd) matchDate = false;
+    let d = new Date(inc.date); let fy = (d.getMonth() + 1 >= 10) ? d.getFullYear() + 1 + 543 : d.getFullYear() + 543;
+    let matchDept = (fDept === 'all') || (inc.dept === fDept); let matchFY = (fFY === 'all') || (fy.toString() === fFY);
+    let matchDate = true; if(fStart && d < fStart) matchDate=false; if(fEnd && d > fEnd) matchDate=false;
     return matchDept && matchFY && matchDate;
   });
 
@@ -424,26 +485,33 @@ function renderDashboard() {
     }
   });
 
+  let resBars = validBars.filter(b => b.status === 'แก้ไขแล้ว').length;
+  let totBars = validBars.length;
+  let barPct = totBars > 0 ? Math.round((resBars/totBars)*100) : 0;
+
   document.getElementById('dInc').textContent = totalInc;
   document.getElementById('dPct').textContent = pct + '%';
   document.getElementById('dSubRCA').textContent = `ทำแล้ว ${totalDone} จาก ${totalInc} เรื่อง`;
   document.getElementById('dSpd').textContent = spdCount > 0 ? Math.round(spdSum/spdCount) + ' วัน' : '0 วัน';
-  document.getElementById('dFac').textContent = validBars.filter(b => b.status === 'แก้ไขแล้ว').length;
+  document.getElementById('dFac').textContent = barPct + '%';
+  document.getElementById('dSubFac').textContent = `แก้ไขแล้ว ${resBars} จาก ${totBars} รายการ`;
 
-  let sevC = {'E':0,'F':0,'G':0,'H':0,'I':0}; let statC = {'รอทำ RCA':0, 'ทำ RCA แล้ว':0};
-  validInc.forEach(i => { sevC[i.severity.trim()]++; statC[i.status]++; });
+  let deptC = {};
+  validInc.forEach(i => { if(i.dept) deptC[i.dept] = (deptC[i.dept]||0)+1; });
+  let deptArr = Object.entries(deptC).sort((a,b)=>b[1]-a[1]);
+  let dh = ''; deptArr.forEach(x => { dh+=`<tr><td>${x[0]}</td><td style="text-align:center;">${x[1]}</td></tr>`; });
+  document.getElementById('deptDashTableBody').innerHTML = dh;
 
-  if(chartSev) chartSev.destroy();
-  chartSev = new Chart(document.getElementById('sevChart'), { type: 'bar', data: { labels: Object.keys(sevC), datasets: [{ label: 'เคส', data: Object.values(sevC), backgroundColor:'#3b82f6'}] }});
   if(chartStatus) chartStatus.destroy();
-  chartStatus = new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: Object.keys(statC), datasets: [{ data: Object.values(statC), backgroundColor:['#f59e0b', '#10b981']}] }});
+  chartStatus = new Chart(document.getElementById('statusChart'), { 
+    type: 'bar', 
+    data: { labels: ['ทำ RCA แล้ว', 'ยังไม่ทำ RCA'], datasets: [{ data: [totalDone, totalInc - totalDone], backgroundColor:['#10b981', '#ef4444']}] },
+    options: { indexAxis: 'y', plugins: { legend: {display:false} }, scales: { x: { beginAtZero: true, ticks:{stepSize:1} } } }
+  });
 }
 
 // ================= ACTIONS =================
-function goToRCA(no) {
-  tsIncident.setValue(no);
-  switchView('formView', document.getElementById('menuRCA'));
-}
+function goToRCA(no) { tsIncident.setValue(no); switchView('formView', document.getElementById('menuRCA')); }
 
 async function saveNewIncident() {
   const d = { no: document.getElementById('newIncNo').value, date: document.getElementById('newIncDate').value, severity: document.getElementById('newIncSev').value, dept: tsAdminDept.getValue(), desc: document.getElementById('newIncDesc').value };
@@ -454,167 +522,110 @@ async function saveNewIncident() {
 }
 
 async function saveNewDepartment() {
-  const deptName = document.getElementById('newDeptName').value;
-  if(!deptName) return;
-  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addDepartment', deptName: deptName }) });
-  alert('เพิ่มหน่วยงานสำเร็จ'); fetchAllData(); document.getElementById('newDeptName').value = '';
+  const d = document.getElementById('newDeptName').value; if(!d) return;
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addDepartment', deptName: d }) });
+  alert('เพิ่มสำเร็จ'); fetchAllData(); document.getElementById('newDeptName').value = '';
+}
+async function editDept(oldName) {
+  let n = prompt("ระบุชื่อหน่วยงานใหม่:", oldName);
+  if(n && n !== oldName) { await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'editDepartment', oldName:oldName, newName:n }) }); fetchAllData(); }
+}
+async function delDept(name) {
+  if(confirm(`ลบหน่วยงาน ${name}?`)) { await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDepartment', deptName:name }) }); fetchAllData(); }
 }
 
-async function deleteIncident(no, status) {
-  if(!confirm('ยืนยันการลบ? RCA ที่เกี่ยวข้องจะถูกลบทิ้งด้วย')) return;
-  let act = status === 'ทำ RCA แล้ว' ? 'deleteRCA' : 'deleteIncident';
+async function deleteIncident(no, type) {
+  let act = type === 'RCA' ? 'deleteRCA' : 'deleteIncident';
+  if(!confirm(`ยืนยันการลบ ${type} ของเลขที่ ${no} ?`)) return;
   await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: act, incidentNo: no }) });
   alert('ลบข้อมูลสำเร็จ'); fetchAllData();
 }
 
-async function updateBarrier(idx, incNo, barrier) {
-  let stat = document.getElementById(`bStat_${idx}`).value;
-  let out = document.getElementById(`bOut_${idx}`).value;
-  document.getElementById(`bBtn_${idx}`).disabled = true;
-  document.getElementById(`bBtn_${idx}`).textContent = 'กำลังบันทึก..';
-  
+async function updateBarrierNest(incNo, barrier, idx) {
+  let stat = document.getElementById(`nbStat_${incNo}_${idx}`).value;
+  let out = document.getElementById(`nbOut_${incNo}_${idx}`).value;
   await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'updateBarrier', incNo:incNo, barrier:barrier, status:stat, outcome:out }) });
   alert('อัปเดตสถานะสำเร็จ'); fetchAllData();
 }
 
 async function saveToCloud() {
-  if(!currentUser) return alert('กรุณาเข้าระบบ');
-  if(!data.rcaInfo.severityLevel) return alert('กรุณาเลือกระดับความรุนแรง');
-  if(data.flows.length === 0) return alert('กรุณาเพิ่ม Flow');
-  
+  if(!currentUser) return alert('กรุณาเข้าระบบ'); if(!data.rcaInfo.severityLevel) return alert('กรุณาเลือกระดับความรุนแรง'); if(data.flows.length === 0) return alert('กรุณาเพิ่ม Flow');
   document.getElementById('cloudSaveBtn').disabled = true;
   let payload = { action: 'saveRCA', data: { no: document.getElementById('rcaIncNo').value, severity: data.rcaInfo.severityLevel, desc: document.getElementById('rcaDesc').value, date: document.getElementById('rcaDate').value, analysisDate: document.getElementById('rcaAnaDate').value, dept: document.getElementById('rcaDept').value, participants: tsPartDept.getValue().join(', '), flows: data.flows }};
-  
   await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
   alert('บันทึก RCA สำเร็จ'); fetchAllData(); tsIncident.clear(); tsPartDept.clear(); data.flows = []; renderFlows();
-  document.getElementById('cloudSaveBtn').disabled = false;
-  switchView('incidentListView', document.querySelector('.menu-item:nth-child(2)'));
+  document.getElementById('cloudSaveBtn').disabled = false; switchView('incidentListView', document.querySelector('.menu-item:nth-child(2)'));
 }
 
 // ================= AUTH =================
 function openLoginForm() {
-  var html = `<div class="form-popup"><h2>เข้าสู่ระบบ</h2>
-    <div class="form-group"><input type="text" id="lUser" placeholder="Username"></div>
-    <div class="form-group"><input type="password" id="lPass" placeholder="Password" onkeypress="if(event.key==='Enter') doLogin()"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Login (Enter)</button> <button class="btn" onclick="closeAllForms()">Cancel</button></div>`;
-  document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden');
-  setTimeout(()=>document.getElementById('lUser').focus(), 100);
+  var html = `<div class="form-popup"><h2>เข้าสู่ระบบ</h2><div class="form-group"><input type="text" id="lUser" placeholder="Username"></div><div class="form-group"><input type="password" id="lPass" placeholder="Password" onkeypress="if(event.key==='Enter') doLogin()"></div><button class="btn btn-primary" onclick="doLogin()">Login (Enter)</button> <button class="btn" onclick="closeAllForms()">Cancel</button></div>`;
+  document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden'); setTimeout(()=>document.getElementById('lUser').focus(), 100);
 }
 async function doLogin() {
   let u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
-  let res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) });
-  let result = await res.json();
+  let res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) }); let result = await res.json();
   if(result.status === 'success') {
-    currentUser = result.name; userRole = result.role;
-    document.getElementById('userGreeting').textContent = `${userRole}: ${currentUser}`;
-    document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('logoutBtn').classList.remove('hidden');
-    document.getElementById('cloudSaveBtn').classList.remove('hidden');
+    currentUser = result.name; userRole = result.role; document.getElementById('userGreeting').textContent = `${userRole}: ${currentUser}`;
+    document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('logoutBtn').classList.remove('hidden'); document.getElementById('cloudSaveBtn').classList.remove('hidden');
     if(userRole === 'Admin') document.getElementById('adminMenus').classList.remove('hidden');
-    closeAllForms(); renderBarrierTable(); renderIncidentTable();
+    closeAllForms(); renderIncidentTable();
   } else alert('รหัสผิด');
 }
 function logout() { currentUser = null; userRole = null; location.reload(); }
 function closeAllForms() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('formContainer').innerHTML = ''; }
 
-// ================= RCA FLOW BUILDER & DIAGRAM (WITH RIGHT-ALIGN EDIT/DEL & MERGE CELLS) =================
-function openFlowForm(editIdx = -1) {
-  editingFlowIdx = editIdx;
-  let val = editIdx > -1 ? data.flows[editIdx].name : '';
-  let title = editIdx > -1 ? 'แก้ไขขั้นตอน' : 'เพิ่มขั้นตอน (Flow)';
-  var html = `<div class="form-popup"><h2>${title}</h2><div class="form-group"><input type="text" id="flowName" value="${val}" onkeypress="if(event.key==='Enter') saveFlow()"></div><button class="btn btn-primary" onclick="saveFlow()">บันทึก (Enter)</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
-  document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden');
-  setTimeout(() => document.getElementById('flowName').focus(), 100);
+// ================= RCA BUILDER & DIAGRAM =================
+function openFlowForm(e = -1) {
+  editingFlowIdx = e; let v = e > -1 ? data.flows[e].name : ''; let t = e > -1 ? 'แก้ไข' : 'เพิ่ม (Flow)';
+  document.getElementById('formContainer').innerHTML = `<div class="form-popup"><h2>${t}</h2><div class="form-group"><input type="text" id="flowName" value="${v}" onkeypress="if(event.key==='Enter') saveFlow()"></div><button class="btn btn-primary" onclick="saveFlow()">บันทึก</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
+  document.getElementById('overlay').classList.remove('hidden'); setTimeout(() => document.getElementById('flowName').focus(), 100);
 }
 function saveFlow() {
-  let name = document.getElementById('flowName').value;
-  if (!name) return;
-  if(editingFlowIdx > -1) { data.flows[editingFlowIdx].name = name; } else { data.flows.push({ id: Date.now(), name: name, acts: [] }); }
+  let n = document.getElementById('flowName').value; if(!n) return;
+  if(editingFlowIdx > -1) data.flows[editingFlowIdx].name = n; else data.flows.push({ id: Date.now(), name: n, acts: [] });
   closeAllForms(); renderFlows();
 }
-
-function openActForm(fIdx, aIdx = -1) {
-  editingAct = { fIdx: fIdx, aIdx: aIdx };
-  let val = aIdx > -1 ? data.flows[fIdx].acts[aIdx].name : '';
-  let title = aIdx > -1 ? 'แก้ไข Unsafe Act' : 'เพิ่ม Unsafe Act';
-  var html = `<div class="form-popup"><h2>${title}</h2><div class="form-group"><textarea id="actName" rows="3" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); saveAct();}">${val}</textarea><small>*กด Enter เพื่อบันทึก, Shift+Enter ขึ้นบรรทัดใหม่</small></div><button class="btn btn-warning" onclick="saveAct()">บันทึก</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
-  document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden');
-  setTimeout(() => document.getElementById('actName').focus(), 100);
+function openActForm(f, a = -1) {
+  editingAct = { fIdx: f, aIdx: a }; let v = a > -1 ? data.flows[f].acts[a].name : ''; let t = a > -1 ? 'แก้ไข' : 'เพิ่ม Unsafe Act';
+  document.getElementById('formContainer').innerHTML = `<div class="form-popup"><h2>${t}</h2><div class="form-group"><textarea id="actName" rows="3" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); saveAct();}">${v}</textarea></div><button class="btn btn-warning" onclick="saveAct()">บันทึก</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
+  document.getElementById('overlay').classList.remove('hidden'); setTimeout(() => document.getElementById('actName').focus(), 100);
 }
 function saveAct() {
-  let name = document.getElementById('actName').value; if (!name) return;
-  let f = editingAct.fIdx, a = editingAct.aIdx;
-  if(a > -1) { data.flows[f].acts[a].name = name; } else { data.flows[f].acts.push({ name: name, factors: [] }); }
+  let n = document.getElementById('actName').value; if(!n) return; let f = editingAct.fIdx, a = editingAct.aIdx;
+  if(a > -1) data.flows[f].acts[a].name = n; else data.flows[f].acts.push({ name: n, factors: [] });
   closeAllForms(); renderFlows();
 }
 
-// Factor Edit Logic
 var curFac = {f:0, a:0, facIdx:-1, tier:0, group:0, cause:0, bars:[], otherBar:''};
 function openFactorForm(f, a, facIdx = -1) { 
-  if(facIdx > -1) {
-    let ex = data.flows[f].acts[a].factors[facIdx];
-    curFac = { f:f, a:a, facIdx:facIdx, tier: ex.tier, group: ex.groupId||0, cause: ex.causeId||0, bars: [...ex.barriers], otherBar: ex.otherBarrier||'' };
-  } else {
-    curFac = {f:f, a:a, facIdx:-1, tier:0, group:0, cause:0, bars:[], otherBar:''}; 
-  }
+  if(facIdx > -1) { let ex = data.flows[f].acts[a].factors[facIdx]; curFac = { f:f, a:a, facIdx:facIdx, tier: ex.tier, group: ex.groupId||0, cause: ex.causeId||0, bars: [...ex.barriers], otherBar: ex.otherBarrier||'' }; } 
+  else curFac = {f:f, a:a, facIdx:-1, tier:0, group:0, cause:0, bars:[], otherBar:''}; 
   renderFactorForm(); 
 }
 
 function renderFactorForm() {
   var html = '<div class="form-popup" style="max-height:85vh;overflow-y:auto"><h2>🎯 วิเคราะห์ปัจจัยเชิงระบบ</h2>';
   html += '<div class="form-group"><label>1️⃣ เลือก Tier</label><div class="grid-4">';
-  rcaDatabase.tiers.forEach(t=>{
-    let sel = curFac.tier===t.id?'opacity:1;box-shadow:0 0 0 3px #3b82f6':'opacity:0.6';
-    html+=`<button class="btn tier-${t.id}" style="${sel}" onclick="curFac.tier=${t.id};curFac.group=0;curFac.cause=0;renderFactorForm()">${t.name}</button>`;
-  }); html+='</div></div>';
-  
-  if(curFac.tier>0){
-    html+='<div class="form-group"><label>2️⃣ เลือกกลุ่มสาเหตุ</label><div class="grid-2">';
-    (rcaDatabase.groups[curFac.tier]||[]).forEach(g=>{
-      let sel = curFac.group===g.id?'background:#8b5cf6;color:white':'background:white;border:1px solid #d1d5db;color:black';
-      html+=`<button class="btn" style="${sel}" onclick="curFac.group=${g.id};curFac.cause=0;renderFactorForm()">${g.name}</button>`;
-    }); html+='</div></div>';
-  }
-  
-  if(curFac.group>0){
-    html+='<div class="form-group"><label>3️⃣ เลือกสาเหตุ</label><div style="max-height:150px;overflow-y:auto;border:1px solid #ddd;padding:5px;border-radius:4px;">';
-    rcaDatabase.causes.filter(c=>c.groupId===curFac.group).forEach(c=>{
-      let sel = curFac.cause===c.id?'background:#fef3c7;border:1px solid #f59e0b':'background:white;border:1px solid #ddd';
-      html+=`<button class="btn" style="${sel};width:100%;text-align:left;margin-bottom:4px;color:black" onclick="curFac.cause=${c.id};curFac.bars=[];renderFactorForm()"><strong>${c.thai}</strong></button>`;
-    }); html+='</div></div>';
-  }
-
+  rcaDatabase.tiers.forEach(t=>{ let sel = curFac.tier===t.id?'opacity:1;box-shadow:0 0 0 3px #3b82f6':'opacity:0.6'; html+=`<button class="btn tier-${t.id}" style="${sel}" onclick="curFac.tier=${t.id};curFac.group=0;curFac.cause=0;renderFactorForm()">${t.name}</button>`; }); html+='</div></div>';
+  if(curFac.tier>0){ html+='<div class="form-group"><label>2️⃣ เลือกกลุ่มสาเหตุ</label><div class="grid-2">'; (rcaDatabase.groups[curFac.tier]||[]).forEach(g=>{ let sel = curFac.group===g.id?'background:#8b5cf6;color:white':'background:white;border:1px solid #d1d5db;color:black'; html+=`<button class="btn" style="${sel}" onclick="curFac.group=${g.id};curFac.cause=0;renderFactorForm()">${g.name}</button>`; }); html+='</div></div>'; }
+  if(curFac.group>0){ html+='<div class="form-group"><label>3️⃣ เลือกสาเหตุ</label><div style="max-height:150px;overflow-y:auto;border:1px solid #ddd;padding:5px;">'; rcaDatabase.causes.filter(c=>c.groupId===curFac.group).forEach(c=>{ let sel = curFac.cause===c.id?'background:#fef3c7;border:1px solid #f59e0b':'background:white;border:1px solid #ddd'; html+=`<button class="btn" style="${sel};width:100%;text-align:left;margin-bottom:4px;color:black" onclick="curFac.cause=${c.id};curFac.bars=[];renderFactorForm()"><strong>${c.thai}</strong></button>`; }); html+='</div></div>'; }
   if(curFac.cause>0){
-    html+='<div class="form-group"><label>4️⃣ ด่านกั้น (Barrier) ที่ล้มเหลว</label><div style="border:1px solid #ddd;padding:10px;background:#f9fafb;">';
+    html+='<div class="form-group"><label>4️⃣ ด่านกั้นล้มเหลว</label><div style="border:1px solid #ddd;padding:10px;background:#f9fafb;">';
     var cause = rcaDatabase.causes.find(c=>c.id===curFac.cause);
-    if(cause && cause.barriers) {
-      cause.barriers.forEach(b=>{
-        let chk = curFac.bars.includes(b) ? 'checked' : '';
-        html+=`<label style="cursor:pointer; display:flex; align-items:center; margin-bottom:5px;"><input type="checkbox" ${chk} onchange="toggleBarrier('${b}')" style="margin-right:8px; width:auto;"> ${b}</label>`;
-      });
-    }
+    if(cause && cause.barriers) cause.barriers.forEach(b=>{ let chk = curFac.bars.includes(b) ? 'checked' : ''; html+=`<label style="cursor:pointer; display:flex; align-items:center; margin-bottom:5px;"><input type="checkbox" ${chk} onchange="toggleBarrier('${b}')" style="margin-right:8px; width:auto;"> ${b}</label>`; });
     html+=`<div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;"><input type="text" id="oBar" placeholder="ด่านกั้นอื่นๆ..." value="${curFac.otherBar}" oninput="curFac.otherBar=this.value"></div></div></div>`;
-    let curSol = curFac.facIdx > -1 ? data.flows[curFac.f].acts[curFac.a].factors[curFac.facIdx].solution : '';
-    html+=`<div class="form-group"><label>5️⃣ มาตรการแก้ไข</label><textarea id="fSol" rows="2">${curSol}</textarea></div>`;
+    let curSol = curFac.facIdx > -1 ? data.flows[curFac.f].acts[curFac.a].factors[curFac.facIdx].solution : ''; html+=`<div class="form-group"><label>5️⃣ มาตรการแก้ไข</label><textarea id="fSol" rows="2">${curSol}</textarea></div>`;
   }
-  
   html+='<div class="btn-group" style="margin-top:20px;"><button class="btn btn-primary" onclick="saveFactorData()">💾 บันทึกปัจจัย</button><button class="btn" onclick="closeAllForms()">ยกเลิก</button></div></div>';
   document.getElementById('formContainer').innerHTML=html; document.getElementById('overlay').classList.remove('hidden');
 }
 
 function toggleBarrier(b){ let i=curFac.bars.indexOf(b); if(i>-1)curFac.bars.splice(i,1); else curFac.bars.push(b); renderFactorForm(); }
 function saveFactorData(){
-  if(!curFac.cause) return alert('เลือกสาเหตุ');
-  var c = rcaDatabase.causes.find(x=>x.id===curFac.cause);
-  var bars = curFac.bars.slice(); 
-  
-  let factorObj = { 
-    tier: curFac.tier, groupId: curFac.group, causeId: curFac.cause, cause: c.thai, 
-    barriers: bars, otherBarrier: curFac.otherBar, 
-    solution: document.getElementById('fSol')?document.getElementById('fSol').value:'' 
-  };
-
-  if(curFac.facIdx > -1) { data.flows[curFac.f].acts[curFac.a].factors[curFac.facIdx] = factorObj; } 
-  else { data.flows[curFac.f].acts[curFac.a].factors.push(factorObj); }
+  if(!curFac.cause) return alert('เลือกสาเหตุ'); var c = rcaDatabase.causes.find(x=>x.id===curFac.cause); var bars = curFac.bars.slice(); 
+  let obj = { tier: curFac.tier, groupId: curFac.group, causeId: curFac.cause, cause: c.thai, barriers: bars, otherBarrier: curFac.otherBar, solution: document.getElementById('fSol')?document.getElementById('fSol').value:'' };
+  if(curFac.facIdx > -1) data.flows[curFac.f].acts[curFac.a].factors[curFac.facIdx] = obj; else data.flows[curFac.f].acts[curFac.a].factors.push(obj);
   closeAllForms(); renderFlows();
 }
 
@@ -622,29 +633,17 @@ function renderFlows() {
   var html = ''; let fC=0, aC=0;
   for (var i = 0; i < data.flows.length; i++) {
     fC++;
-    html += `<div class="flow-item"><div class="flow-header">
-      <div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div>
-      <div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️ แก้ไข</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️ ลบ</button></div>
-    </div>`;
+    html += `<div class="flow-item"><div class="flow-header"><div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div><div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️</button></div></div>`;
     for (var j = 0; j < data.flows[i].acts.length; j++) {
       var act = data.flows[i].acts[j]; aC++;
-      html += `<div class="unsafe-act"><div class="unsafe-header">
-        <div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div>
-        <div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div>
-      </div>`;
+      html += `<div class="unsafe-act"><div class="unsafe-header"><div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div><div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div></div>`;
       for (var k = 0; k < act.factors.length; k++) {
         var f = act.factors[k];
-        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div style="flex:1;"><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
-        
+        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div style="flex:1;"><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
         let allBars = f.barriers.slice(); if(f.otherBarrier) allBars.push(f.otherBarrier);
         if (allBars.length > 0) html += `<span style="font-size:12px; color:#991b1b;">ด่านกั้นล้มเหลว: ${allBars.map(b=>`<span class="barrier-tag">${b}</span>`).join('')}</span>`;
         if (f.solution) html += `<div class="solution-box"><strong>มาตรการ:</strong> ${f.solution}</div>`;
-        
-        html += `</div><div style="white-space:nowrap; margin-left:10px; display:flex; flex-direction:column; gap:5px;">
-          <button class="btn btn-sm btn-warning" onclick="openFactorForm(${i}, ${j}, ${k})">✏️</button>
-          <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">🗑️</button>
-        </div></div></div>`;
+        html += `</div><div style="white-space:nowrap; margin-left:10px; display:flex; flex-direction:column; gap:5px;"><button class="btn btn-sm btn-warning" onclick="openFactorForm(${i}, ${j}, ${k})">✏️</button><button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">🗑️</button></div></div></div>`;
       }
       html += `<button class="btn btn-sm btn-purple" style="margin-top:8px;" onclick="openFactorForm(${i}, ${j})">➕ เพิ่มปัจจัยเชิงระบบ</button></div>`;
     }
@@ -655,24 +654,14 @@ function renderFlows() {
 }
 
 function visualizeDiagram() {
-  if(data.flows.length === 0) return alert('ยังไม่มีข้อมูล Flow');
-  var win = window.open('', 'Diagram', 'width=1400,height=900');
-  
-  let columns = [];
-  let flowRowHtml = `<td class="label-cell" style="color:#1f2937;">Flow of Steps</td>`;
-  
+  if(data.flows.length === 0) return alert('ยังไม่มีข้อมูล'); var win = window.open('', 'Diagram', 'width=1400,height=900'); let columns = []; let flowRowHtml = `<td class="label-cell" style="color:#1f2937;">Flow of Steps</td>`;
   data.flows.forEach((flow, idx) => {
-    let actCount = flow.acts.length > 0 ? flow.acts.length : 1;
-    let arrow = idx < data.flows.length - 1 ? '<div class="flow-arrow">➔</div>' : '';
+    let actCount = flow.acts.length > 0 ? flow.acts.length : 1; let arrow = idx < data.flows.length - 1 ? '<div class="flow-arrow">➔</div>' : '';
     flowRowHtml += `<td colspan="${actCount}" style="vertical-align: middle; text-align: center; position:relative;"><div class="flow-box">${flow.name}${arrow}</div></td>`;
-    
-    if(flow.acts.length === 0) { columns.push({ actName: "-", factors: [] }); } 
-    else { flow.acts.forEach(act => { columns.push({ actName: act.name, factors: act.factors }); }); }
+    if(flow.acts.length === 0) { columns.push({ actName: "-", factors: [] }); } else { flow.acts.forEach(act => { columns.push({ actName: act.name, factors: act.factors }); }); }
   });
-
   var html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>2-Axis Swiss Cheese Diagram</title><style>body { font-family: 'Sarabun', Arial, sans-serif; padding: 30px; background: #f8fafc; color: #1e293b; } h1 { text-align: center; color: #1e40af; margin-bottom: 5px; } p { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; } .matrix-container { width: 100%; overflow-x: auto; padding-bottom: 20px; } table { border-collapse: collapse; min-width: 100%; table-layout: fixed; background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; } th, td { border: 1px solid #e2e8f0; padding: 15px; vertical-align: bottom; width: 280px; position: relative;} .row-tier4 { background-color: #fef2f2; } .row-tier3 { background-color: #fefce8; } .row-tier2 { background-color: #f0fdf4; } .row-tier1 { background-color: #eff6ff; } .row-act { background-color: #fdf2f8; } .row-flow { background-color: #ffffff; text-align: center; } .label-cell { font-weight: bold; width: 200px !important; text-align: left; vertical-align: middle; border-right: 3px solid #cbd5e1; font-size: 15px; } .factor-box { background: white; border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 10px; border-radius: 6px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #94a3b8; } .act-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; color: #92400e; } .flow-box { background: #3b82f6; color: white; padding: 15px; border-radius: 6px; font-weight: bold; text-align: center; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3); } .flow-arrow { position: absolute; right: -20px; top: 50%; transform: translateY(-50%); color: #3b82f6; font-size: 28px; z-index: 10; font-weight: bold; }</style></head><body>
-  <h1>2-Axis Swiss Cheese RCA Diagram</h1>
-  <p>Incident: ${document.getElementById('rcaIncNo').value || '-'} | Risk: ${document.getElementById('rcaDesc').value || '-'}</p>
+  <h1>2-Axis Swiss Cheese RCA Diagram</h1><p>Incident: ${document.getElementById('rcaIncNo').value || '-'} | Risk: ${document.getElementById('rcaDesc').value || '-'}</p>
   <div class="matrix-container"><table>
       <tr class="row-tier4"><td class="label-cell" style="color:#dc2626;">Tier 4<br><small style="color:#7f1d1d;font-weight:normal;">Organizational Process / Management</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 4, '#dc2626')}</td>`).join('')}</tr>
       <tr class="row-tier3"><td class="label-cell" style="color:#d97706;">Tier 3<br><small style="color:#92400e;font-weight:normal;">Environment / Technology</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 3, '#f59e0b')}</td>`).join('')}</tr>
@@ -680,15 +669,10 @@ function visualizeDiagram() {
       <tr class="row-tier1"><td class="label-cell" style="color:#2563eb;">Tier 1<br><small style="color:#1e3a8a;font-weight:normal;">Individual / Patient Factor</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 1, '#3b82f6')}</td>`).join('')}</tr>
       <tr class="row-act"><td class="label-cell" style="color:#be185d;">Unsafe Act /<br>Potential Change</td>${columns.map(col => `<td><div class="act-box">${col.actName}</div></td>`).join('')}</tr>
       <tr class="row-flow">${flowRowHtml}</tr>
-    </table></div>
-  <div style="text-align: center; margin-top: 30px;"><button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">🖨️ สั่งพิมพ์ (Print)</button></div>
-  </body></html>`;
+    </table></div><div style="text-align: center; margin-top: 30px;"><button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">🖨️ สั่งพิมพ์ (Print)</button></div></body></html>`;
   win.document.write(html); win.document.close();
 }
-
-function getFactorsHTML(factors, targetTier, colorHex) {
-  return factors.filter(f => f.tier === targetTier).map(f => `<div class="factor-box" style="border-left-color: ${colorHex};"><strong>${f.cause}</strong><br><small style="color:#64748b;">${f.solution ? 'มาตรการ: '+f.solution : ''}</small></div>`).join('');
-}
+function getFactorsHTML(factors, targetTier, colorHex) { return factors.filter(f => f.tier === targetTier).map(f => `<div class="factor-box" style="border-left-color: ${colorHex};"><strong>${f.cause}</strong><br><small style="color:#64748b;">${f.solution ? 'มาตรการ: '+f.solution : ''}</small></div>`).join(''); }
 </script>
 </body>
 </html>
