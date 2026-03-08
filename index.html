@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <style>
+  /* ================= BASE ================= */
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Sarabun', Arial, sans-serif; }
   body { background: #f0f2f5; color: #333; overflow-x: hidden; }
   .topbar { background: #1e40af; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -48,13 +49,15 @@
   th { background-color: #f9fafb; font-weight: 600; color: #4b5563; }
   tr:hover { background-color: #f3f4f6; }
   .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-  .bg-green { background: #dcfce7; color: #166534; } .bg-yellow { background: #fef9c3; color: #854d0e; } .bg-red { background: #fee2e2; color: #991b1b; }
+  .bg-green { background: #dcfce7; color: #166534; } .bg-yellow { background: #fef9c3; color: #854d0e; }
 
-  /* RCA Form */
+  /* RCA Form & Flow UI */
   .flow-item { border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 16px 0; background: #eff6ff; }
   .flow-header { background: #3b82f6; color: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; }
   .unsafe-act { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 10px 0; border-radius: 6px; }
+  .unsafe-header { background: #fde68a; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
   .factor-item { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; margin: 8px 0; font-size: 13px; }
+  .barrier-tag { display: inline-block; background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 11px; }
 
   .hidden { display: none !important; }
   .form-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
@@ -82,6 +85,7 @@
     <div id="adminMenus" class="hidden">
       <div class="menu-item menu-admin" style="margin-top: 15px; cursor: default;">ส่วนจัดการ (Admin Only)</div>
       <div class="menu-item menu-admin" onclick="switchView('adminIncidentView', this)">➕ ลงทะเบียนอุบัติการณ์ใหม่</div>
+      <div class="menu-item menu-admin" onclick="switchView('adminDeptView', this)">🏢 เพิ่มรายชื่อหน่วยงาน</div>
     </div>
   </div>
 
@@ -133,14 +137,15 @@
     </div>
 
     <div id="formView" class="hidden">
-      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap:10px;">
         <div><h1>2-Axis Swiss Cheese RCA</h1></div>
         <div class="btn-group">
           <button class="btn btn-cloud hidden" id="cloudSaveBtn" onclick="saveToCloud()">☁️ บันทึก RCA</button>
-          <button class="btn btn-purple" onclick="visualizeDiagram()">🎨 สร้าง Diagram 2-Axis</button>
+          <button class="btn btn-purple" id="visualizeBtn" onclick="visualizeDiagram()" style="display:none;">🎨 สร้าง Diagram 2-Axis</button>
         </div>
       </div>
       <div class="card">
+        <div class="form-group"><label>ค้นหาทะเบียนที่รอทำ RCA</label><select id="incidentSelect" placeholder="พิมพ์ค้นหา..."></select></div>
         <div class="grid-2">
           <div class="form-group"><label>เลขที่ใบอุบัติการณ์</label><input type="text" id="rcaIncNo" readonly style="background:#f3f4f6;"></div>
           <div class="form-group"><label>ระดับความรุนแรง</label><div class="checkbox-grid" id="severityLevel"></div></div>
@@ -152,12 +157,12 @@
         </div>
         <div class="grid-2">
           <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><input type="text" id="rcaDept" readonly style="background:#f3f4f6;"></div>
-          <div class="form-group"><label>ผู้ร่วมวิเคราะห์ (พิมพ์คั่นด้วยลูกน้ำ)</label><input type="text" id="rcaPart"></div>
+          <div class="form-group"><label>ผู้ร่วมวิเคราะห์</label><input type="text" id="rcaPart"></div>
         </div>
       </div>
       <div id="flowsContainer"></div>
       <div class="card" style="text-align: center;">
-        <button class="btn btn-primary" onclick="openFlowForm()">➕ เพิ่ม Flow of Step</button>
+        <button class="btn btn-primary" onclick="openFlowForm()" style="width: 100%; max-width: 300px; padding: 12px;">➕ เพิ่ม Flow of Step</button>
       </div>
     </div>
 
@@ -177,6 +182,14 @@
       </div>
     </div>
 
+    <div id="adminDeptView" class="hidden">
+      <div class="card">
+        <h1>เพิ่มรายชื่อหน่วยงาน (Admin)</h1>
+        <div class="form-group"><label>ชื่อหน่วยงานใหม่</label><input type="text" id="newDeptName"></div>
+        <button class="btn btn-primary" onclick="saveNewDepartment()">เพิ่มหน่วยงาน</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -185,69 +198,153 @@
 
 <script>
 // ================= GLOBAL VARIABLES =================
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzVoOxzMZFnxh1R8irhFskQW3Fbu1g-XU-oMgDqfBvHmJ-ngEzeDpL-W-aEiMvsBkGv/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxxSkhfbywZZ9XYyb8TDcm-yI8_sbGSuG6Cpt4N8BaZd33qy_tGNS9539ltHAe_lfkU/exec";
 let currentUser = null, userRole = null;
-let db = { depts:[], incidents:[], rcas:[], barriers:[] }; // เก็บ Data ทั้งหมดจาก Backend
+let db = { depts:[], incidents:[], rcas:[], barriers:[] }; 
 var data = { flows: [], rcaInfo: { severityLevel: '' } };
 let chartSev, chartStatus;
 
-// Tom Select 
-let tsAdminDept, tsFilterDept;
+// State Variables for Editing
+let editingFlowIdx = -1;
+let editingAct = { flowIdx: -1, actIdx: -1 };
 
-// RCA Data Structure (Using your requested factors/barriers)
-// (เพื่อความกระชับในโค้ด ผมขออ้างอิงโครงสร้างเดียวกับคำตอบก่อนหน้า สามารถเพิ่ม rcaDatabase ก้อนเดิมมาแปะตรงนี้ได้เลย)
+// Tom Select Instances
+let tsIncident, tsAdminDept, tsFilterDept;
 
-// ================= INIT & FETCH =================
+// DATABASE (CAUSES & BARRIERS 85 Items)
+var rcaDatabase = {
+  tiers: [ {id:1,name:'Tier 1',label:'Individuals'}, {id:2,name:'Tier 2',label:'Work & Team'}, {id:3,name:'Tier 3',label:'Environment/Tech'}, {id:4,name:'Tier 4',label:'Management'} ],
+  groups: {
+    1: [{id:2,name:'ผู้ป่วย (Patient Factors)'}, {id:1,name:'บุคลากร (Staff Factors)'}],
+    2: [{id:3,name:'ลักษณะงานที่ปฏิบัติ (Nature of Work)'}, {id:4,name:'ทีมทำงาน (Team)'}],
+    3: [{id:5,name:'การสื่อสาร (Communication)'}, {id:6,name:'การกำกับดูแล/สนับสนุน'}, {id:8,name:'ข้อมูลสารสนเทศ'}, {id:9,name:'อุปกรณ์/เครื่องมือ'}, {id:10,name:'สิ่งแวดล้อม'}],
+    4: [{id:7,name:'นโยบายและขั้นตอนปฏิบัติ'}]
+  },
+  causes: [
+    {id:10, groupId:2, thai:'ภาวะทางคลินิก', en:'Clinical condition', barriers:['Protocol การประเมินเบื้องต้น','การซักประวัติอย่างเป็นระบบ','ระบบ Triage']},
+    {id:11, groupId:2, thai:'ยาที่ผู้ป่วยได้รับ', en:'Medication', barriers:['ระบบตรวจสอบยาซ้ำ','ระบบ Medication Reconciliation','ระบบป้องกัน Medication Error']},
+    {id:12, groupId:2, thai:'ภาษา, สังคมวัฒนธรรม', en:'Language, sociocultural', barriers:['ล่ามแปลภาษา','เอกสารหลายภาษา','Cultural Competency ของบุคลากร']},
+    {id:13, groupId:2, thai:'การได้รับข้อมูล', en:'Informed & literacy', barriers:['ระบบให้ความรู้ผู้ป่วย','แผ่นพับ/วิดีโอ','informed consent']},
+    {id:37, groupId:2, thai:'สภาวะเฉพาะบุคคล', en:'Individual conditions', barriers:['การประเมินแบบองค์รวม']},
+    {id:1, groupId:1, thai:'ความเหนื่อยล้า', en:'Fatigue', barriers:['ระบบจัดตารางเวรที่ยุติธรรม','การเฝ้าระวังภาวะเหนื่อยล้า หมดแรง','การมีเวรพักที่เพียงพอ']},
+    {id:2, groupId:1, thai:'ความเครียด', en:'Stress', barriers:['การสนับสนุนสุขภาพจิต','ส่งเสริม work-life balance']},
+    {id:3, groupId:1, thai:'ความไม่ใส่ใจ', en:'Inattention', barriers:['การมีระบบ feedback','การตรวจสอบการปฏิบัติแบบ Audit','Supervision โดยหัวหน้างาน']},
+    {id:4, groupId:1, thai:'สมรรถนะ, ความรู้, ทักษะ, ประสบการณ์', en:'Knowledge, Skills, Competence', barriers:['การส่งเสริมการพัฒนาตนเองของบุคลากร','การประเมิน competency','ระบบ mentorship','การจัดเวรตาม competency']},
+    {id:5, groupId:1, thai:'อคติทางความคิด', en:'Cognitive bias', barriers:['อบรม cognitive bias','team debriefing']},
+    {id:7, groupId:1, thai:'ปัญหาสุขภาพ', en:'Health issues', barriers:['คัดกรองสุขภาพบุคลากร','Occupational health support']},
+    {id:8, groupId:1, thai:'ทัศนคติ กรอบความคิด วัฒนธรรม', en:'Attitude, Mindset, Culture', barriers:['Cultural Competency ของบุคลากร']},
+    {id:13, groupId:1, thai:'ข้อจำกัดในการแสดงออกความปลอดภัย', en:'Barrier to speaking up', barriers:['วัฒนธรรม open communication','ระบบ report ที่ไม่เอาผิด']},
+    {id:14, groupId:3, thai:'ความซับซ้อนของกระบวนการ', en:'Work process Complexity', barriers:['CPG / Care Map','Checklist','SOP / QP / WI / Flow การทำงาน']},
+    {id:15, groupId:3, thai:'งานที่ต้องแข่งขันกัน', en:'Competing tasks', barriers:['กระจายงานเหมาะสม','float staff']},
+    {id:16, groupId:3, thai:'การขัดจังหวะ', en:'Interruptions', barriers:['no interruption zone','visual cue']},
+    {id:17, groupId:3, thai:'ความต้องการทางกายภาพ/สติปัญญา', en:'Physical/Cognitive requirements', barriers:['Job training','competency check','จัดหาอุปกรณ์ครบถ้วน']},
+    {id:18, groupId:4, thai:'ความชัดเจนของบทบาท/ขาดความรับผิดชอบ', en:'Role clarity/Lack of responsibility', barriers:['การประชุมสั้น ๆ (Team Meeting)','การกำหนดหน้าที่เป็นลายลักษณ์อักษร','การแบ่งหน้าที่ระหว่างทีมงาน']},
+    {id:19, groupId:4, thai:'ความเข้าใจภาพรวม', en:'Briefing, Awareness', barriers:['brief-debrief','การประชุมทีมสหวิชาชีพ']},
+    {id:20, groupId:5, thai:'หัวหน้างานถึงเจ้าหน้าที่', en:'Supervisor to staff', barriers:['ช่องทางสื่อสารสองทาง','การประชุมเวร','การสื่อสารโดยตรงระหว่างผู้นำกับผู้ตาม']},
+    {id:21, groupId:5, thai:'ระหว่างเจ้าหน้าที่', en:'Among staff or team members', barriers:['SBAR','brief-debrief','การส่งเวร (handoff protocol)']},
+    {id:22, groupId:5, thai:'เจ้าหน้าที่ถึงผู้ป่วย', en:'Staff to patient', barriers:['การสื่อสารแบบเห็นอกเห็นใจ','การแปลภาษา','Teach-back']},
+    {id:23, groupId:6, thai:'การกำกับดูแลทางคลินิก', en:'Clinical supervision', barriers:['การตรวจสอบแผนการรักษา','การกำกับดูแลทางคลินิก']},
+    {id:24, groupId:6, thai:'การกำกับดูแลของผู้บริหาร', en:'Managerial supervision', barriers:['การกำกับติดตามนโยบายคุณภาพ','การจัดการความเสี่ยง']},
+    {id:28, groupId:8, thai:'ความพร้อมใช้งานข้อมูล', en:'Availability (IT/Data)', barriers:['HOSxP (HIS) เข้าถึงง่าย','การแจ้งเตือนอัตโนมัติ']},
+    {id:29, groupId:8, thai:'ความแม่นยำข้อมูล', en:'Accuracy (Data)', barriers:['การทวนสอบข้อมูล','double-check','validation logic']},
+    {id:30, groupId:8, thai:'ความชัดเจนข้อมูล', en:'Legibility', barriers:['ออกแบบข้อมูลให้อ่านง่าย','dashboard visualization']},
+    {id:31, groupId:9, thai:'การทำงานเครื่องมือ', en:'Function', barriers:['การออกแบบตามหลักสรีรศาสตร์','การควบคุมเสียง/แสง']},
+    {id:32, groupId:9, thai:'การออกแบบเครื่องมือ', en:'Design', barriers:['การเลือกใช้เครื่องมือที่เหมาะสม','การอบรมการใช้งาน']},
+    {id:33, groupId:9, thai:'ความพร้อมใช้งานเครื่องมือ', en:'Availability', barriers:['Human Factors Design','user-centered design']},
+    {id:34, groupId:9, thai:'การบำรุงรักษา', en:'Maintenance', barriers:['inventory control','เครื่องสำรอง','แจ้งเตือนของขาด']},
+    {id:35, groupId:10, thai:'วัฒนธรรมความปลอดภัย', en:'Culture of safety', barriers:['การ audit & feedback','ระบบความรับผิดชอบ']},
+    {id:36, groupId:10, thai:'สภาพแวดล้อมทางกายภาพ', en:'Physical surroundings', barriers:['ระบบบริหารความเสี่ยง','ผู้นำส่งเสริม safety culture']},
+    {id:25, groupId:7, thai:'การกำหนดนโยบาย', en:'Presence of policies', barriers:['Preventive maintenance','checklist ตรวจสอบก่อนใช้งาน']},
+    {id:26, groupId:7, thai:'ความชัดเจนของนโยบาย', en:'Clarity of policies', barriers:['มีคณะกรรมการหรือผู้รับผิดชอบ','มีการทบทวนนโยบาย']},
+    {id:27, groupId:7, thai:'การไม่ปฏิบัติตามนโยบาย', en:'Lack of compliance', barriers:['มีคู่มือปฏิบัติงาน','มีการอบรมความเข้าใจนโยบาย']}
+  ]
+};
+
+// ================= INIT =================
 window.onload = function() {
   document.getElementById('rcaAnaDate').value = new Date().toISOString().split('T')[0];
-  initTomSelects();
-  generateFYOptions();
-  renderSeverityButtons();
+  initTomSelects(); generateFYOptions(); renderSeverityButtons();
   fetchAllData();
 };
 
 function initTomSelects() {
+  tsIncident = new TomSelect("#incidentSelect", { valueField:'no', labelField:'label', searchField:['label'], onChange: autoFillIncidentData });
   tsAdminDept = new TomSelect("#newIncDept", {create: false});
   tsFilterDept = new TomSelect("#filterDept", {create: false});
 }
 
 function generateFYOptions() {
-  let y = new Date().getFullYear();
-  let h = '<option value="all">ทุกปีงบประมาณ</option>';
+  let y = new Date().getFullYear(); let h = '<option value="all">ทุกปีงบประมาณ</option>';
   for(let i=-2; i<=1; i++) h += `<option value="${y+i+543}">ปีงบฯ ${y+i+543}</option>`;
   document.getElementById('filterFY').innerHTML = h;
 }
 
+function renderSeverityButtons() {
+  let html = '';
+  ['E','F','G','H','I'].forEach(lvl => { html += `<div class="sev-btn" id="sev${lvl}" onclick="selectSeverity('${lvl}')">${lvl}</div>`; });
+  document.getElementById('severityLevel').innerHTML = html;
+}
+
+function selectSeverity(level) {
+  if(!level) return;
+  document.querySelectorAll('.sev-btn').forEach(el => el.classList.remove('active'));
+  let btn = document.getElementById('sev' + level);
+  if (btn) btn.classList.add('active');
+  data.rcaInfo.severityLevel = level;
+}
+
+// ================= FETCH ALL DATA =================
 async function fetchAllData() {
   try {
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllData' }) });
     const result = await res.json();
     if(result.status === 'success') {
-      db.depts = result.depts;
-      db.incidents = result.incidents;
-      db.rcas = result.rcas;
-      db.barriers = result.barriers;
-      
-      // Update Dept Dropdowns
-      tsAdminDept.clearOptions(); tsFilterDept.clearOptions();
+      db = result;
+      // Update Dropdowns
+      tsAdminDept.clearOptions(); tsFilterDept.clearOptions(); tsIncident.clearOptions();
       tsFilterDept.addOption({value: 'all', text: 'ทุกหน่วยงาน'});
-      db.depts.forEach(d => {
-        tsAdminDept.addOption({value: d, text: d});
-        tsFilterDept.addOption({value: d, text: d});
-      });
+      db.depts.forEach(d => { tsAdminDept.addOption({value:d,text:d}); tsFilterDept.addOption({value:d,text:d}); });
       
-      renderDashboard();
-      renderIncidentTable();
-      renderBarrierTable();
-    }
-  } catch(e) { console.error(e); }
+      // Update RCA Dropdown (เฉพาะที่รอทำ RCA)
+      db.incidents.filter(inc => inc.status === 'รอทำ RCA').forEach(inc => {
+        tsIncident.addOption({ no: inc.no, label: `${inc.no} : ${inc.desc}` });
+      });
+
+      renderDashboard(); renderIncidentTable(); renderBarrierTable();
+    } else { alert("เกิดข้อผิดพลาดในการดึงข้อมูล: " + result.message); }
+  } catch(e) { console.error(e); alert("การเชื่อมต่อฐานข้อมูลล้มเหลว กรุณาตรวจสอบ URL หรือการตั้งค่า Sheet"); }
 }
 
-// ================= RENDER VIEWS =================
+function autoFillIncidentData(no) {
+  if(!no) {
+     document.getElementById('rcaIncNo').value = ''; document.getElementById('rcaDesc').value = '';
+     document.getElementById('rcaDate').value = ''; document.getElementById('rcaDept').value = '';
+     document.querySelectorAll('.sev-btn').forEach(el => el.classList.remove('active')); return;
+  }
+  const inc = db.incidents.find(x => String(x.no) === String(no));
+  if(inc) {
+    document.getElementById('rcaIncNo').value = inc.no; document.getElementById('rcaDesc').value = inc.desc;
+    document.getElementById('rcaDept').value = inc.dept;
+    if(inc.date) {
+      let d = new Date(inc.date);
+      if(!isNaN(d.getTime())) document.getElementById('rcaDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    if (inc.severity) selectSeverity(inc.severity.trim());
+  }
+}
+
+// ================= VIEWS & TABLES =================
+function switchView(id, el) {
+  document.querySelectorAll('.main-content>div').forEach(e=>e.classList.add('hidden')); document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active')); el.classList.add('active');
+  if(window.innerWidth <= 768) toggleSidebar();
+  if(id === 'dashboardView') renderDashboard();
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
 function renderIncidentTable() {
   let statFilter = document.getElementById('fltIncStatus').value;
   let search = document.getElementById('fltIncSearch').value.toLowerCase();
-  
   let html = '';
   db.incidents.filter(inc => ['E','F','G','H','I'].includes(inc.severity.trim())).forEach(inc => {
     if(statFilter !== 'all' && inc.status !== statFilter) return;
@@ -256,10 +353,8 @@ function renderIncidentTable() {
     let badge = inc.status === 'รอทำ RCA' ? 'bg-yellow' : 'bg-green';
     let dStr = new Date(inc.date).toLocaleDateString('th-TH');
     
-    // ปุ่มจัดการ
     let btnRCA = inc.status === 'รอทำ RCA' ? `<button class="btn btn-sm btn-primary" onclick="goToRCA('${inc.no}')">ทำ RCA</button>` : `<button class="btn btn-sm" disabled style="background:#d1d5db;color:black;">ทำ RCA แล้ว</button>`;
     let btnDel = userRole === 'Admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteIncident('${inc.no}', '${inc.status}')">ลบ</button>` : '';
-
     html += `<tr><td>${dStr}</td><td>${inc.no}</td><td>${inc.desc}</td><td>${inc.severity}</td><td>${inc.dept}</td><td><span class="badge ${badge}">${inc.status}</span></td><td>${btnRCA} ${btnDel}</td></tr>`;
   });
   document.querySelector('#incTable tbody').innerHTML = html;
@@ -268,133 +363,122 @@ function renderIncidentTable() {
 function renderBarrierTable() {
   let html = '';
   db.barriers.forEach(b => {
-    let selN = b.status === 'ยังไม่แก้ไข' ? 'selected' : '';
     let selY = b.status === 'แก้ไขแล้ว' ? 'selected' : '';
     let bg = b.status === 'แก้ไขแล้ว' ? 'background:#dcfce7;' : '';
-    
-    // ถ้าไม่ใช่ Admin หรือคนที่เกี่ยวข้อง ให้ disable ไว้ก่อน (ในที่นี้เปิดให้ User แก้ได้)
     let disabled = !currentUser ? 'disabled' : '';
-
-    html += `<tr style="${bg}">
-      <td><strong>${b.incNo}</strong></td>
-      <td>${b.barrier}</td>
-      <td><select id="bStat_${b.incNo}_${b.barrier}" ${disabled}><option value="ยังไม่แก้ไข" ${selN}>ยังไม่แก้ไข</option><option value="แก้ไขแล้ว" ${selY}>แก้ไขแล้ว</option></select></td>
+    html += `<tr style="${bg}"><td><strong>${b.incNo}</strong></td><td>${b.barrier}</td>
+      <td><select id="bStat_${b.incNo}_${b.barrier}" ${disabled}><option value="ยังไม่แก้ไข">ยังไม่แก้ไข</option><option value="แก้ไขแล้ว" ${selY}>แก้ไขแล้ว</option></select></td>
       <td><input type="text" id="bOut_${b.incNo}_${b.barrier}" value="${b.action||''}" ${disabled} placeholder="ระบุผลลัพธ์..."></td>
-      <td><button class="btn btn-sm btn-success" ${disabled} onclick="updateBarrier('${b.incNo}', '${b.barrier}')">บันทึก</button></td>
-    </tr>`;
+      <td><button class="btn btn-sm btn-success" ${disabled} onclick="updateBarrier('${b.incNo}', '${b.barrier}')">บันทึก</button></td></tr>`;
   });
   document.querySelector('#barrierTable tbody').innerHTML = html;
 }
 
 function renderDashboard() {
-  // ประยุกต์ Filter
   let fDept = document.getElementById('filterDept').value;
   let fFY = document.getElementById('filterFY').value;
+  let fStart = document.getElementById('filterStart').value ? new Date(document.getElementById('filterStart').value) : null;
+  let fEnd = document.getElementById('filterEnd').value ? new Date(document.getElementById('filterEnd').value) : null;
   
   let validInc = db.incidents.filter(inc => ['E','F','G','H','I'].includes(inc.severity.trim()));
-  
   validInc = validInc.filter(inc => {
     let d = new Date(inc.date);
     let fy = (d.getMonth() + 1 >= 10) ? d.getFullYear() + 1 + 543 : d.getFullYear() + 543;
     let matchDept = (fDept === 'all') || (inc.dept === fDept);
     let matchFY = (fFY === 'all') || (fy.toString() === fFY);
-    return matchDept && matchFY;
+    let matchDate = true;
+    if(fStart && d < fStart) matchDate = false;
+    if(fEnd && d > fEnd) matchDate = false;
+    return matchDept && matchFY && matchDate;
   });
 
   let incNos = validInc.map(i => i.no);
   let validRCAs = db.rcas.filter(r => incNos.includes(r.no));
   let validBars = db.barriers.filter(b => incNos.includes(b.incNo));
 
-  // KPIs
-  let totalInc = validInc.length;
-  let totalDone = validRCAs.length;
+  let totalInc = validInc.length; let totalDone = validRCAs.length;
   let pct = totalInc > 0 ? Math.round((totalDone/totalInc)*100) : 0;
   
-  let spdSum = 0; let spdCount = 0;
+  let spdSum = 0, spdCount = 0;
   validRCAs.forEach(r => {
     if(r.incidentDate && r.analysisDate) {
       let days = (new Date(r.analysisDate) - new Date(r.incidentDate))/(1000*3600*24);
       if(days >= 0) { spdSum+=days; spdCount++; }
     }
   });
-  
-  let resolvedBars = validBars.filter(b => b.status === 'แก้ไขแล้ว').length;
-  let totalBars = validBars.length;
 
   document.getElementById('dInc').textContent = totalInc;
   document.getElementById('dPct').textContent = pct + '%';
   document.getElementById('dSubRCA').textContent = `ทำแล้ว ${totalDone} จาก ${totalInc} เรื่อง`;
   document.getElementById('dSpd').textContent = spdCount > 0 ? Math.round(spdSum/spdCount) + ' วัน' : '0 วัน';
-  document.getElementById('dFac').textContent = resolvedBars;
-  document.getElementById('dFac').nextElementSibling.textContent = `จากด่านกั้นล้มเหลว ${totalBars} รายการ`;
+  document.getElementById('dFac').textContent = validBars.filter(b => b.status === 'แก้ไขแล้ว').length;
 
-  // Charts
-  let sevC = {'E':0,'F':0,'G':0,'H':0,'I':0};
-  let statC = {'รอทำ RCA':0, 'ทำ RCA แล้ว':0};
+  let sevC = {'E':0,'F':0,'G':0,'H':0,'I':0}; let statC = {'รอทำ RCA':0, 'ทำ RCA แล้ว':0};
   validInc.forEach(i => { sevC[i.severity.trim()]++; statC[i.status]++; });
 
   if(chartSev) chartSev.destroy();
-  chartSev = new Chart(document.getElementById('sevChart'), { type: 'bar', data: { labels: Object.keys(sevC), datasets: [{ label: 'จำนวนเคส', data: Object.values(sevC), backgroundColor:'#3b82f6'}] }});
-
+  chartSev = new Chart(document.getElementById('sevChart'), { type: 'bar', data: { labels: Object.keys(sevC), datasets: [{ label: 'เคส', data: Object.values(sevC), backgroundColor:'#3b82f6'}] }});
   if(chartStatus) chartStatus.destroy();
   chartStatus = new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: Object.keys(statC), datasets: [{ data: Object.values(statC), backgroundColor:['#f59e0b', '#10b981']}] }});
 }
 
 // ================= ACTIONS =================
-function goToRCA(incNo) {
-  let inc = db.incidents.find(i => i.no === incNo);
-  if(!inc) return;
-  document.getElementById('rcaIncNo').value = inc.no;
-  document.getElementById('rcaDesc').value = inc.desc;
-  document.getElementById('rcaDate').value = inc.date ? new Date(inc.date).toISOString().split('T')[0] : '';
-  document.getElementById('rcaDept').value = inc.dept;
-  selectSeverity(inc.severity.trim());
-  data.flows = []; renderFlows();
+function goToRCA(no) {
+  tsIncident.setValue(no);
   switchView('formView', document.getElementById('menuRCA'));
 }
 
-async function saveToCloud() {
-  if(!currentUser) return alert('กรุณาเข้าระบบ');
-  if(data.flows.length === 0) return alert('กรุณาเพิ่ม Flow');
-  
-  document.getElementById('cloudSaveBtn').disabled = true;
-  let payload = { action: 'saveRCA', data: {
-    no: document.getElementById('rcaIncNo').value, severity: data.rcaInfo.severityLevel,
-    desc: document.getElementById('rcaDesc').value, date: document.getElementById('rcaDate').value,
-    analysisDate: document.getElementById('rcaAnaDate').value, dept: document.getElementById('rcaDept').value,
-    participants: document.getElementById('rcaPart').value, flows: data.flows
-  }};
-  
-  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-  alert('บันทึก RCA สำเร็จ'); 
-  document.getElementById('rcaIncNo').value = '';
-  document.getElementById('cloudSaveBtn').disabled = false;
-  fetchAllData();
-  switchView('incidentListView', document.querySelector('.menu-item:nth-child(2)'));
+async function saveNewIncident() {
+  const d = { no: document.getElementById('newIncNo').value, date: document.getElementById('newIncDate').value, severity: document.getElementById('newIncSev').value, dept: tsAdminDept.getValue(), desc: document.getElementById('newIncDesc').value };
+  if(!d.no || !d.dept) return alert('ข้อมูลไม่ครบ');
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'registerIncident', data: d }) });
+  alert('ลงทะเบียนสำเร็จ'); fetchAllData();
+  document.getElementById('newIncNo').value = ''; document.getElementById('newIncDesc').value = ''; tsAdminDept.clear(); 
+}
+
+async function saveNewDepartment() {
+  const deptName = document.getElementById('newDeptName').value;
+  if(!deptName) return;
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addDepartment', deptName: deptName }) });
+  alert('เพิ่มหน่วยงานสำเร็จ'); fetchAllData(); document.getElementById('newDeptName').value = '';
+}
+
+async function deleteIncident(no, status) {
+  if(!confirm('ยืนยันการลบ? RCA ที่เกี่ยวข้องจะถูกลบทิ้งด้วย')) return;
+  let act = status === 'ทำ RCA แล้ว' ? 'deleteRCA' : 'deleteIncident';
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: act, incidentNo: no }) });
+  alert('ลบข้อมูลสำเร็จ'); fetchAllData();
 }
 
 async function updateBarrier(incNo, barrier) {
   let stat = document.getElementById(`bStat_${incNo}_${barrier}`).value;
   let out = document.getElementById(`bOut_${incNo}_${barrier}`).value;
   await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'updateBarrier', incNo:incNo, barrier:barrier, status:stat, outcome:out }) });
-  alert('อัปเดตสถานะด่านกั้นสำเร็จ');
-  fetchAllData();
+  alert('อัปเดตสถานะสำเร็จ'); fetchAllData();
 }
 
-async function deleteIncident(incNo, status) {
-  if(!confirm('ยืนยันการลบอุบัติการณ์นี้? หากมี RCA แล้ว RCA จะถูกลบด้วย')) return;
-  let act = status === 'ทำ RCA แล้ว' ? 'deleteRCA' : 'deleteIncident';
-  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: act, incidentNo: incNo }) });
-  alert('ลบข้อมูลสำเร็จ'); fetchAllData();
+async function saveToCloud() {
+  if(!currentUser) return alert('กรุณาเข้าระบบ');
+  if(!data.rcaInfo.severityLevel) return alert('กรุณาเลือกระดับความรุนแรง');
+  if(data.flows.length === 0) return alert('กรุณาเพิ่ม Flow');
+  
+  document.getElementById('cloudSaveBtn').disabled = true;
+  let payload = { action: 'saveRCA', data: { no: document.getElementById('rcaIncNo').value, severity: data.rcaInfo.severityLevel, desc: document.getElementById('rcaDesc').value, date: document.getElementById('rcaDate').value, analysisDate: document.getElementById('rcaAnaDate').value, dept: document.getElementById('rcaDept').value, participants: document.getElementById('rcaPart').value, flows: data.flows }};
+  
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+  alert('บันทึก RCA สำเร็จ'); fetchAllData(); tsIncident.clear(); data.flows = []; renderFlows();
+  document.getElementById('cloudSaveBtn').disabled = false;
+  switchView('incidentListView', document.querySelector('.menu-item:nth-child(2)'));
 }
 
-// ================= AUTH / UI HELPERS =================
+// ================= AUTH =================
 function openLoginForm() {
   var html = `<div class="form-popup"><h2>เข้าสู่ระบบ</h2>
     <div class="form-group"><input type="text" id="lUser" placeholder="Username"></div>
     <div class="form-group"><input type="password" id="lPass" placeholder="Password" onkeypress="if(event.key==='Enter') doLogin()"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Login</button> <button class="btn" onclick="closeAllForms()">Cancel</button></div>`;
+    <button class="btn btn-primary" onclick="doLogin()">Login (Enter)</button> <button class="btn" onclick="closeAllForms()">Cancel</button></div>`;
   document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('lUser').focus(), 100);
 }
 async function doLogin() {
   let u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
@@ -406,41 +490,147 @@ async function doLogin() {
     document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('logoutBtn').classList.remove('hidden');
     document.getElementById('cloudSaveBtn').classList.remove('hidden');
     if(userRole === 'Admin') document.getElementById('adminMenus').classList.remove('hidden');
-    closeAllForms(); renderBarrierTable();
+    closeAllForms(); renderBarrierTable(); renderIncidentTable();
   } else alert('รหัสผิด');
 }
 function logout() { currentUser = null; userRole = null; location.reload(); }
+function closeAllForms() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('formContainer').innerHTML = ''; }
 
-// ================= RCA FORM BUILDER & DIAGRAM (เหมือนเดิมเป๊ะ) =================
-function selectSeverity(lvl) { document.querySelectorAll('.sev-btn').forEach(e=>e.classList.remove('active')); document.getElementById('sev'+lvl).classList.add('active'); data.rcaInfo.severityLevel = lvl; }
-function switchView(id, el) { document.querySelectorAll('.main-content>div').forEach(e=>e.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active')); el.classList.add('active'); }
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-function closeAllForms() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('formContainer').innerHTML=''; }
+// ================= RCA FLOW BUILDER & DIAGRAM =================
+function openFlowForm(editIdx = -1) {
+  editingFlowIdx = editIdx;
+  let val = editIdx > -1 ? data.flows[editIdx].name : '';
+  let title = editIdx > -1 ? 'แก้ไขขั้นตอน' : 'เพิ่มขั้นตอน (Flow)';
+  var html = `<div class="form-popup"><h2>${title}</h2><div class="form-group"><input type="text" id="flowName" value="${val}" onkeypress="if(event.key==='Enter') saveFlow()"></div><button class="btn btn-primary" onclick="saveFlow()">บันทึก (Enter)</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
+  document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('flowName').focus(), 100);
+}
+function saveFlow() {
+  let name = document.getElementById('flowName').value;
+  if (!name) return;
+  if(editingFlowIdx > -1) { data.flows[editingFlowIdx].name = name; } else { data.flows.push({ id: Date.now(), name: name, acts: [] }); }
+  closeAllForms(); renderFlows();
+}
 
-// RCA Build Functions (openFlowForm, saveFlow, etc. จากโค้ดก่อนหน้า วางต่อตรงนี้ได้เลยเพื่อให้ Diagram ทำงาน)
-function visualizeDiagram() {
-  if(data.flows.length === 0) return alert('ยังไม่มีข้อมูล');
-  var win = window.open('', 'Diagram', 'width=1400,height=900');
-  var html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>2-Axis RCA Diagram</title><style>body {font-family:Arial;padding:20px;background:#f5f5f5;} .flows {display:flex;gap:30px;} .flow {min-width:250px;background:#eff6ff;padding:20px;border-radius:8px;} .flow-title {background:#3b82f6;color:white;padding:12px;border-radius:6px;margin-bottom:16px;text-align:center;font-weight:bold;} .act {background:#fef3c7;border:2px solid #f59e0b;padding:12px;margin:12px 0;border-radius:6px;} .factor {background:white;border:1px solid #ddd;padding:8px;margin:8px 0;border-radius:4px;font-size:12px;} .tier-1 {border-left:4px solid #3b82f6;} .tier-2 {border-left:4px solid #10b981;} .tier-3 {border-left:4px solid #f59e0b;} .tier-4 {border-left:4px solid #ef4444;}</style></head><body><h1>2-Axis RCA Diagram</h1><div class="flows">`;
+function openActForm(fIdx, aIdx = -1) {
+  editingAct = { fIdx: fIdx, aIdx: aIdx };
+  let val = aIdx > -1 ? data.flows[fIdx].acts[aIdx].name : '';
+  let title = aIdx > -1 ? 'แก้ไข Unsafe Act' : 'เพิ่ม Unsafe Act';
+  var html = `<div class="form-popup"><h2>${title}</h2><div class="form-group"><textarea id="actName" rows="3" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); saveAct();}">${val}</textarea><small>*กด Enter เพื่อบันทึก, Shift+Enter ขึ้นบรรทัดใหม่</small></div><button class="btn btn-warning" onclick="saveAct()">บันทึก</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
+  document.getElementById('formContainer').innerHTML = html; document.getElementById('overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('actName').focus(), 100);
+}
+function saveAct() {
+  let name = document.getElementById('actName').value; if (!name) return;
+  let f = editingAct.fIdx, a = editingAct.aIdx;
+  if(a > -1) { data.flows[f].acts[a].name = name; } else { data.flows[f].acts.push({ name: name, factors: [] }); }
+  closeAllForms(); renderFlows();
+}
+
+var curFac = {f:0,a:0,tier:0,group:0,cause:0,bars:[],otherBar:''};
+function openFactorForm(f,a) { curFac={f:f,a:a,tier:0,group:0,cause:0,bars:[],otherBar:''}; renderFactorForm(); }
+
+function renderFactorForm() {
+  var html = '<div class="form-popup" style="max-height:85vh;overflow-y:auto"><h2>🎯 วิเคราะห์ปัจจัยเชิงระบบ</h2>';
+  html += '<div class="form-group"><label>1️⃣ เลือก Tier</label><div class="grid-4">';
+  rcaDatabase.tiers.forEach(t=>{
+    let sel = curFac.tier===t.id?'opacity:1;box-shadow:0 0 0 3px #3b82f6':'opacity:0.6';
+    html+=`<button class="btn tier-${t.id}" style="${sel}" onclick="curFac.tier=${t.id};curFac.group=0;curFac.cause=0;renderFactorForm()">${t.name}</button>`;
+  }); html+='</div></div>';
   
-  for (var i = 0; i < data.flows.length; i++) {
-    html += `<div class="flow"><div class="flow-title">Flow of Step ${i+1}<br>${data.flows[i].name}</div>`;
-    for (var j = 0; j < data.flows[i].acts.length; j++) {
-      var act = data.flows[i].acts[j];
-      var sortedFactors = act.factors.slice().sort((a,b) => a.tier - b.tier).reverse();
-      html += `<div class="act"><strong>Unsafe Act ${j+1}</strong><br>${act.name}`;
-      for (var k = 0; k < sortedFactors.length; k++) {
-        var f = sortedFactors[k];
-        html += `<div class="factor tier-${f.tier}"><strong>T${f.tier}:</strong> ${f.cause}</div>`;
-      }
-      html += `</div>`;
-    }
-    html += `</div>`;
+  if(curFac.tier>0){
+    html+='<div class="form-group"><label>2️⃣ เลือกกลุ่มสาเหตุ</label><div class="grid-2">';
+    (rcaDatabase.groups[curFac.tier]||[]).forEach(g=>{
+      let sel = curFac.group===g.id?'background:#8b5cf6;color:white':'background:white;border:1px solid #d1d5db;color:black';
+      html+=`<button class="btn" style="${sel}" onclick="curFac.group=${g.id};curFac.cause=0;renderFactorForm()">${g.name}</button>`;
+    }); html+='</div></div>';
   }
-  html += `</div></body></html>`;
+  
+  if(curFac.group>0){
+    html+='<div class="form-group"><label>3️⃣ เลือกสาเหตุ</label><div style="max-height:150px;overflow-y:auto;border:1px solid #ddd;padding:5px;border-radius:4px;">';
+    rcaDatabase.causes.filter(c=>c.groupId===curFac.group).forEach(c=>{
+      let sel = curFac.cause===c.id?'background:#fef3c7;border:1px solid #f59e0b':'background:white;border:1px solid #ddd';
+      html+=`<button class="btn" style="${sel};width:100%;text-align:left;margin-bottom:4px;color:black" onclick="curFac.cause=${c.id};curFac.bars=[];renderFactorForm()"><strong>${c.thai}</strong></button>`;
+    }); html+='</div></div>';
+  }
+
+  if(curFac.cause>0){
+    html+='<div class="form-group"><label>4️⃣ ด่านกั้น (Barrier) ที่ล้มเหลว</label><div style="border:1px solid #ddd;padding:10px;background:#f9fafb;">';
+    var cause = rcaDatabase.causes.find(c=>c.id===curFac.cause);
+    if(cause && cause.barriers) {
+      cause.barriers.forEach(b=>{
+        let chk = curFac.bars.includes(b) ? 'checked' : '';
+        html+=`<label style="cursor:pointer; display:flex; align-items:center; margin-bottom:5px;"><input type="checkbox" ${chk} onchange="toggleBarrier('${b}')" style="margin-right:8px; width:auto;"> ${b}</label>`;
+      });
+    }
+    html+=`<div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;"><input type="text" id="oBar" placeholder="ด่านกั้นอื่นๆ..." value="${curFac.otherBar}" oninput="curFac.otherBar=this.value"></div></div></div>`;
+    html+='<div class="form-group"><label>5️⃣ มาตรการแก้ไข</label><textarea id="fSol" rows="2"></textarea></div>';
+  }
+  
+  html+='<div class="btn-group" style="margin-top:20px;"><button class="btn btn-primary" onclick="saveFactorData()">💾 บันทึกปัจจัย</button><button class="btn" onclick="closeAllForms()">ยกเลิก</button></div></div>';
+  document.getElementById('formContainer').innerHTML=html; document.getElementById('overlay').classList.remove('hidden');
+}
+
+function toggleBarrier(b){ let i=curFac.bars.indexOf(b); if(i>-1)curFac.bars.splice(i,1); else curFac.bars.push(b); renderFactorForm(); }
+function saveFactorData(){
+  if(!curFac.cause) return alert('เลือกสาเหตุ');
+  var c = rcaDatabase.causes.find(x=>x.id===curFac.cause);
+  var bars = curFac.bars.slice(); if(curFac.otherBar) bars.push(curFac.otherBar);
+  data.flows[curFac.f].acts[curFac.a].factors.push({ tier: curFac.tier, cause: c.thai, barriers: bars, solution: document.getElementById('fSol')?document.getElementById('fSol').value:'' });
+  closeAllForms(); renderFlows();
+}
+
+function renderFlows() {
+  var html = ''; let fC=0, aC=0;
+  for (var i = 0; i < data.flows.length; i++) {
+    fC++;
+    html += `<div class="flow-item"><div class="flow-header"><div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div><div><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️ แก้ไข</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️ ลบ</button></div></div>`;
+    for (var j = 0; j < data.flows[i].acts.length; j++) {
+      var act = data.flows[i].acts[j]; aC++;
+      html += `<div class="unsafe-act"><div class="unsafe-header"><div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div><div><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div></div>`;
+      for (var k = 0; k < act.factors.length; k++) {
+        var f = act.factors[k];
+        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between;"><div><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
+        if (f.barriers && f.barriers.length > 0) html += `<span style="font-size:12px; color:#991b1b;">ด่านกั้นล้มเหลว: ${(f.barriers||[]).map(b=>`<span class="barrier-tag">${b}</span>`).join('')}</span>`;
+        if (f.solution) html += `<div class="solution-box"><strong>มาตรการ:</strong> ${f.solution}</div>`;
+        html += `</div><button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">ลบ</button></div></div>`;
+      }
+      html += `<button class="btn btn-sm btn-purple" style="margin-top:8px;" onclick="openFactorForm(${i}, ${j})">➕ เพิ่มปัจจัยเชิงระบบ</button></div>`;
+    }
+    html += `<button class="btn btn-sm btn-warning" style="color:black; font-weight:bold;" onclick="openActForm(${i})">➕ เพิ่ม Unsafe Act</button></div>`;
+  }
+  document.getElementById('flowsContainer').innerHTML = html;
+  document.getElementById('visualizeBtn').style.display = fC > 0 ? 'inline-block' : 'none';
+}
+
+function visualizeDiagram() {
+  if(data.flows.length === 0) return alert('ยังไม่มีข้อมูล Flow');
+  var win = window.open('', 'Diagram', 'width=1400,height=900');
+  let columns = [];
+  data.flows.forEach(flow => {
+    if(flow.acts.length === 0) { columns.push({ flowName: flow.name, actName: "-", factors: [] }); } 
+    else { flow.acts.forEach(act => { columns.push({ flowName: flow.name, actName: act.name, factors: act.factors }); }); }
+  });
+
+  var html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>2-Axis RCA Diagram</title><style>body { font-family: 'Sarabun', Arial, sans-serif; padding: 30px; background: #f8fafc; color: #1e293b; } h1 { text-align: center; color: #1e40af; margin-bottom: 5px; } p { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; } .matrix-container { width: 100%; overflow-x: auto; padding-bottom: 20px; } table { border-collapse: collapse; min-width: 100%; table-layout: fixed; background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; } th, td { border: 1px solid #e2e8f0; padding: 15px; vertical-align: bottom; width: 280px; position: relative;} .row-tier4 { background-color: #fef2f2; } .row-tier3 { background-color: #fefce8; } .row-tier2 { background-color: #f0fdf4; } .row-tier1 { background-color: #eff6ff; } .row-act { background-color: #fdf2f8; } .row-flow { background-color: #ffffff; text-align: center; } .label-cell { font-weight: bold; width: 200px !important; text-align: left; vertical-align: middle; border-right: 3px solid #cbd5e1; font-size: 15px; } .factor-box { background: white; border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 10px; border-radius: 6px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #94a3b8; } .act-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; color: #92400e; } .flow-box { background: #3b82f6; color: white; padding: 15px; border-radius: 6px; font-weight: bold; text-align: center; position: relative; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3); } .flow-arrow { position: absolute; right: -25px; top: 50%; transform: translateY(-50%); color: #3b82f6; font-size: 28px; z-index: 10; font-weight: bold; }</style></head><body>
+  <h1>2-Axis Swiss Cheese RCA Diagram</h1>
+  <p>Incident: ${document.getElementById('rcaIncNo').value || '-'} | Risk: ${document.getElementById('rcaDesc').value || '-'}</p>
+  <div class="matrix-container"><table>
+      <tr class="row-tier4"><td class="label-cell" style="color:#dc2626;">Tier 4<br><small style="color:#7f1d1d;font-weight:normal;">Organizational Process / Management</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 4, '#dc2626')}</td>`).join('')}</tr>
+      <tr class="row-tier3"><td class="label-cell" style="color:#d97706;">Tier 3<br><small style="color:#92400e;font-weight:normal;">Environment / Technology</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 3, '#f59e0b')}</td>`).join('')}</tr>
+      <tr class="row-tier2"><td class="label-cell" style="color:#16a34a;">Tier 2<br><small style="color:#14532d;font-weight:normal;">Nature of Work / Team</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 2, '#10b981')}</td>`).join('')}</tr>
+      <tr class="row-tier1"><td class="label-cell" style="color:#2563eb;">Tier 1<br><small style="color:#1e3a8a;font-weight:normal;">Individual / Patient Factor</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 1, '#3b82f6')}</td>`).join('')}</tr>
+      <tr class="row-act"><td class="label-cell" style="color:#be185d;">Unsafe Act /<br>Potential Change</td>${columns.map(col => `<td><div class="act-box">${col.actName}</div></td>`).join('')}</tr>
+      <tr class="row-flow"><td class="label-cell" style="color:#1f2937;">Flow of Steps</td>${columns.map((col, idx) => `<td style="vertical-align: middle;"><div class="flow-box">${col.flowName}${idx < columns.length - 1 ? '<div class="flow-arrow">➔</div>' : ''}</div></td>`).join('')}</tr>
+    </table></div>
+  <div style="text-align: center; margin-top: 30px;"><button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">🖨️ สั่งพิมพ์ (Print)</button></div>
+  </body></html>`;
   win.document.write(html); win.document.close();
 }
 
+function getFactorsHTML(factors, targetTier, colorHex) {
+  return factors.filter(f => f.tier === targetTier).map(f => `<div class="factor-box" style="border-left-color: ${colorHex};"><strong>${f.cause}</strong><br><small style="color:#64748b;">${f.solution ? 'มาตรการ: '+f.solution : ''}</small></div>`).join('');
+}
 </script>
 </body>
 </html>
