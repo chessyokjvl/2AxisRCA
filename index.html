@@ -53,12 +53,13 @@
 
   /* RCA Form & Flow UI */
   .flow-item { border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 16px 0; background: #eff6ff; }
-  .flow-header { background: #3b82f6; color: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .flow-header { background: #3b82f6; color: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
   .unsafe-act { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 10px 0; border-radius: 6px; }
+  .unsafe-header { background: #fde68a; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
   .factor-item { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; margin: 8px 0; font-size: 13px; }
   .barrier-tag { display: inline-block; background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 11px; }
   
-  /* แก้ไข: Tier Colors 1-4 ให้สีชัดเจน */
+  /* Tier Colors 1-4 */
   .tier-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 5px; }
   .tier-1, .btn.tier-1 { background-color: #3b82f6 !important; color: white !important; } 
   .btn.tier-1:hover { background-color: #2563eb !important; }
@@ -167,7 +168,6 @@
         </div>
         <div class="grid-2">
           <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><input type="text" id="rcaDept" readonly style="background:#f3f4f6;"></div>
-          
           <div class="form-group"><label>หน่วยงานที่ร่วมวิเคราะห์</label><select id="participatingDepts" multiple placeholder="เลือกได้หลายหน่วยงาน..."></select></div>
         </div>
       </div>
@@ -217,12 +217,12 @@ let chartSev, chartStatus;
 
 // State Variables for Editing
 let editingFlowIdx = -1;
-let editingAct = { flowIdx: -1, actIdx: -1 };
+let editingAct = { fIdx: -1, aIdx: -1 };
 
 // Tom Select Instances
 let tsIncident, tsAdminDept, tsFilterDept, tsPartDept;
 
-// DATABASE (CAUSES & BARRIERS 85 Items)
+// DATABASE 
 var rcaDatabase = {
   tiers: [ {id:1,name:'Tier 1',label:'Individuals'}, {id:2,name:'Tier 2',label:'Work & Team'}, {id:3,name:'Tier 3',label:'Environment/Tech'}, {id:4,name:'Tier 4',label:'Management'} ],
   groups: {
@@ -282,7 +282,6 @@ function initTomSelects() {
   tsIncident = new TomSelect("#incidentSelect", { valueField:'no', labelField:'label', searchField:['label'], onChange: autoFillIncidentData });
   tsAdminDept = new TomSelect("#newIncDept", {create: false});
   tsFilterDept = new TomSelect("#filterDept", {create: false});
-  // เพิ่ม tsPartDept สำหรับ "หน่วยงานที่ร่วมวิเคราะห์"
   tsPartDept = new TomSelect("#participatingDepts", { plugins: ['remove_button'] });
 }
 
@@ -320,7 +319,7 @@ async function fetchAllData() {
       db.depts.forEach(d => { 
         tsAdminDept.addOption({value:d,text:d}); 
         tsFilterDept.addOption({value:d,text:d}); 
-        tsPartDept.addOption({value:d,text:d}); // ใส่ให้กล่องผู้ร่วมวิเคราะห์ด้วย
+        tsPartDept.addOption({value:d,text:d}); 
       });
       
       db.incidents.filter(inc => inc.status === 'รอทำ RCA').forEach(inc => {
@@ -329,7 +328,7 @@ async function fetchAllData() {
 
       renderDashboard(); renderIncidentTable(); renderBarrierTable();
     } else { alert("เกิดข้อผิดพลาดในการดึงข้อมูล: " + result.message); }
-  } catch(e) { console.error(e); alert("การเชื่อมต่อฐานข้อมูลล้มเหลว กรุณาตรวจสอบ URL หรือการตั้งค่า Sheet"); }
+  } catch(e) { console.error(e); alert("การเชื่อมต่อฐานข้อมูลล้มเหลว กรุณาตรวจสอบ URL"); }
 }
 
 function autoFillIncidentData(no) {
@@ -383,7 +382,6 @@ function renderBarrierTable() {
     let selY = b.status === 'แก้ไขแล้ว' ? 'selected' : '';
     let bg = b.status === 'แก้ไขแล้ว' ? 'background:#dcfce7;' : '';
     let disabled = !currentUser ? 'disabled' : '';
-    // แก้ไข: ใช้ idx เป็น id เพื่อป้องกัน ID แตกเมื่อเจอช่องว่าง
     html += `<tr style="${bg}"><td><strong>${b.incNo}</strong></td><td>${b.barrier}</td>
       <td><select id="bStat_${idx}" ${disabled}><option value="ยังไม่แก้ไข">ยังไม่แก้ไข</option><option value="แก้ไขแล้ว" ${selY}>แก้ไขแล้ว</option></select></td>
       <td><input type="text" id="bOut_${idx}" value="${b.action||''}" ${disabled} placeholder="ระบุผลลัพธ์..."></td>
@@ -410,12 +408,10 @@ function renderDashboard() {
     return matchDept && matchFY && matchDate;
   });
 
-  // ใช้ Status จากตาราง Incidents ในการหาว่าทำแล้วกี่เคส (ป้องกันเคสซ้ำ)
   let totalInc = validInc.length; 
   let totalDone = validInc.filter(i => i.status === 'ทำ RCA แล้ว').length;
   let pct = totalInc > 0 ? Math.round((totalDone/totalInc)*100) : 0;
   
-  // กรอง RCA และ Barriers ที่ตรงกับ Incident ที่ผ่าน Filter
   let incNos = validInc.map(i => i.no);
   let validRCAs = db.rcas.filter(r => incNos.includes(r.no));
   let validBars = db.barriers.filter(b => incNos.includes(b.incNo));
@@ -474,7 +470,7 @@ async function deleteIncident(no, status) {
 async function updateBarrier(idx, incNo, barrier) {
   let stat = document.getElementById(`bStat_${idx}`).value;
   let out = document.getElementById(`bOut_${idx}`).value;
-  document.getElementById(`bBtn_${idx}`).disabled = true; // ล็อคปุ่มกันกดซ้ำ
+  document.getElementById(`bBtn_${idx}`).disabled = true;
   document.getElementById(`bBtn_${idx}`).textContent = 'กำลังบันทึก..';
   
   await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'updateBarrier', incNo:incNo, barrier:barrier, status:stat, outcome:out }) });
@@ -520,7 +516,7 @@ async function doLogin() {
 function logout() { currentUser = null; userRole = null; location.reload(); }
 function closeAllForms() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('formContainer').innerHTML = ''; }
 
-// ================= RCA FLOW BUILDER & DIAGRAM =================
+// ================= RCA FLOW BUILDER & DIAGRAM (WITH RIGHT-ALIGN EDIT/DEL & MERGE CELLS) =================
 function openFlowForm(editIdx = -1) {
   editingFlowIdx = editIdx;
   let val = editIdx > -1 ? data.flows[editIdx].name : '';
@@ -551,8 +547,17 @@ function saveAct() {
   closeAllForms(); renderFlows();
 }
 
-var curFac = {f:0,a:0,tier:0,group:0,cause:0,bars:[],otherBar:''};
-function openFactorForm(f,a) { curFac={f:f,a:a,tier:0,group:0,cause:0,bars:[],otherBar:''}; renderFactorForm(); }
+// Factor Edit Logic
+var curFac = {f:0, a:0, facIdx:-1, tier:0, group:0, cause:0, bars:[], otherBar:''};
+function openFactorForm(f, a, facIdx = -1) { 
+  if(facIdx > -1) {
+    let ex = data.flows[f].acts[a].factors[facIdx];
+    curFac = { f:f, a:a, facIdx:facIdx, tier: ex.tier, group: ex.groupId||0, cause: ex.causeId||0, bars: [...ex.barriers], otherBar: ex.otherBarrier||'' };
+  } else {
+    curFac = {f:f, a:a, facIdx:-1, tier:0, group:0, cause:0, bars:[], otherBar:''}; 
+  }
+  renderFactorForm(); 
+}
 
 function renderFactorForm() {
   var html = '<div class="form-popup" style="max-height:85vh;overflow-y:auto"><h2>🎯 วิเคราะห์ปัจจัยเชิงระบบ</h2>';
@@ -588,7 +593,8 @@ function renderFactorForm() {
       });
     }
     html+=`<div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;"><input type="text" id="oBar" placeholder="ด่านกั้นอื่นๆ..." value="${curFac.otherBar}" oninput="curFac.otherBar=this.value"></div></div></div>`;
-    html+='<div class="form-group"><label>5️⃣ มาตรการแก้ไข</label><textarea id="fSol" rows="2"></textarea></div>';
+    let curSol = curFac.facIdx > -1 ? data.flows[curFac.f].acts[curFac.a].factors[curFac.facIdx].solution : '';
+    html+=`<div class="form-group"><label>5️⃣ มาตรการแก้ไข</label><textarea id="fSol" rows="2">${curSol}</textarea></div>`;
   }
   
   html+='<div class="btn-group" style="margin-top:20px;"><button class="btn btn-primary" onclick="saveFactorData()">💾 บันทึกปัจจัย</button><button class="btn" onclick="closeAllForms()">ยกเลิก</button></div></div>';
@@ -599,8 +605,16 @@ function toggleBarrier(b){ let i=curFac.bars.indexOf(b); if(i>-1)curFac.bars.spl
 function saveFactorData(){
   if(!curFac.cause) return alert('เลือกสาเหตุ');
   var c = rcaDatabase.causes.find(x=>x.id===curFac.cause);
-  var bars = curFac.bars.slice(); if(curFac.otherBar) bars.push(curFac.otherBar);
-  data.flows[curFac.f].acts[curFac.a].factors.push({ tier: curFac.tier, cause: c.thai, barriers: bars, solution: document.getElementById('fSol')?document.getElementById('fSol').value:'' });
+  var bars = curFac.bars.slice(); 
+  
+  let factorObj = { 
+    tier: curFac.tier, groupId: curFac.group, causeId: curFac.cause, cause: c.thai, 
+    barriers: bars, otherBarrier: curFac.otherBar, 
+    solution: document.getElementById('fSol')?document.getElementById('fSol').value:'' 
+  };
+
+  if(curFac.facIdx > -1) { data.flows[curFac.f].acts[curFac.a].factors[curFac.facIdx] = factorObj; } 
+  else { data.flows[curFac.f].acts[curFac.a].factors.push(factorObj); }
   closeAllForms(); renderFlows();
 }
 
@@ -608,16 +622,29 @@ function renderFlows() {
   var html = ''; let fC=0, aC=0;
   for (var i = 0; i < data.flows.length; i++) {
     fC++;
-    html += `<div class="flow-item"><div class="flow-header"><div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div><div><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️ แก้ไข</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️ ลบ</button></div></div>`;
+    html += `<div class="flow-item"><div class="flow-header">
+      <div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div>
+      <div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️ แก้ไข</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️ ลบ</button></div>
+    </div>`;
     for (var j = 0; j < data.flows[i].acts.length; j++) {
       var act = data.flows[i].acts[j]; aC++;
-      html += `<div class="unsafe-act"><div class="unsafe-header"><div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div><div><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div></div>`;
+      html += `<div class="unsafe-act"><div class="unsafe-header">
+        <div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div>
+        <div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div>
+      </div>`;
       for (var k = 0; k < act.factors.length; k++) {
         var f = act.factors[k];
-        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between;"><div><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
-        if (f.barriers && f.barriers.length > 0) html += `<span style="font-size:12px; color:#991b1b;">ด่านกั้นล้มเหลว: ${(f.barriers||[]).map(b=>`<span class="barrier-tag">${b}</span>`).join('')}</span>`;
+        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div style="flex:1;"><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
+        
+        let allBars = f.barriers.slice(); if(f.otherBarrier) allBars.push(f.otherBarrier);
+        if (allBars.length > 0) html += `<span style="font-size:12px; color:#991b1b;">ด่านกั้นล้มเหลว: ${allBars.map(b=>`<span class="barrier-tag">${b}</span>`).join('')}</span>`;
         if (f.solution) html += `<div class="solution-box"><strong>มาตรการ:</strong> ${f.solution}</div>`;
-        html += `</div><button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">ลบ</button></div></div>`;
+        
+        html += `</div><div style="white-space:nowrap; margin-left:10px; display:flex; flex-direction:column; gap:5px;">
+          <button class="btn btn-sm btn-warning" onclick="openFactorForm(${i}, ${j}, ${k})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">🗑️</button>
+        </div></div></div>`;
       }
       html += `<button class="btn btn-sm btn-purple" style="margin-top:8px;" onclick="openFactorForm(${i}, ${j})">➕ เพิ่มปัจจัยเชิงระบบ</button></div>`;
     }
@@ -630,13 +657,20 @@ function renderFlows() {
 function visualizeDiagram() {
   if(data.flows.length === 0) return alert('ยังไม่มีข้อมูล Flow');
   var win = window.open('', 'Diagram', 'width=1400,height=900');
+  
   let columns = [];
-  data.flows.forEach(flow => {
-    if(flow.acts.length === 0) { columns.push({ flowName: flow.name, actName: "-", factors: [] }); } 
-    else { flow.acts.forEach(act => { columns.push({ flowName: flow.name, actName: act.name, factors: act.factors }); }); }
+  let flowRowHtml = `<td class="label-cell" style="color:#1f2937;">Flow of Steps</td>`;
+  
+  data.flows.forEach((flow, idx) => {
+    let actCount = flow.acts.length > 0 ? flow.acts.length : 1;
+    let arrow = idx < data.flows.length - 1 ? '<div class="flow-arrow">➔</div>' : '';
+    flowRowHtml += `<td colspan="${actCount}" style="vertical-align: middle; text-align: center; position:relative;"><div class="flow-box">${flow.name}${arrow}</div></td>`;
+    
+    if(flow.acts.length === 0) { columns.push({ actName: "-", factors: [] }); } 
+    else { flow.acts.forEach(act => { columns.push({ actName: act.name, factors: act.factors }); }); }
   });
 
-  var html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>2-Axis RCA Diagram</title><style>body { font-family: 'Sarabun', Arial, sans-serif; padding: 30px; background: #f8fafc; color: #1e293b; } h1 { text-align: center; color: #1e40af; margin-bottom: 5px; } p { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; } .matrix-container { width: 100%; overflow-x: auto; padding-bottom: 20px; } table { border-collapse: collapse; min-width: 100%; table-layout: fixed; background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; } th, td { border: 1px solid #e2e8f0; padding: 15px; vertical-align: bottom; width: 280px; position: relative;} .row-tier4 { background-color: #fef2f2; } .row-tier3 { background-color: #fefce8; } .row-tier2 { background-color: #f0fdf4; } .row-tier1 { background-color: #eff6ff; } .row-act { background-color: #fdf2f8; } .row-flow { background-color: #ffffff; text-align: center; } .label-cell { font-weight: bold; width: 200px !important; text-align: left; vertical-align: middle; border-right: 3px solid #cbd5e1; font-size: 15px; } .factor-box { background: white; border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 10px; border-radius: 6px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #94a3b8; } .act-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; color: #92400e; } .flow-box { background: #3b82f6; color: white; padding: 15px; border-radius: 6px; font-weight: bold; text-align: center; position: relative; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3); } .flow-arrow { position: absolute; right: -25px; top: 50%; transform: translateY(-50%); color: #3b82f6; font-size: 28px; z-index: 10; font-weight: bold; }</style></head><body>
+  var html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>2-Axis Swiss Cheese Diagram</title><style>body { font-family: 'Sarabun', Arial, sans-serif; padding: 30px; background: #f8fafc; color: #1e293b; } h1 { text-align: center; color: #1e40af; margin-bottom: 5px; } p { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; } .matrix-container { width: 100%; overflow-x: auto; padding-bottom: 20px; } table { border-collapse: collapse; min-width: 100%; table-layout: fixed; background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; } th, td { border: 1px solid #e2e8f0; padding: 15px; vertical-align: bottom; width: 280px; position: relative;} .row-tier4 { background-color: #fef2f2; } .row-tier3 { background-color: #fefce8; } .row-tier2 { background-color: #f0fdf4; } .row-tier1 { background-color: #eff6ff; } .row-act { background-color: #fdf2f8; } .row-flow { background-color: #ffffff; text-align: center; } .label-cell { font-weight: bold; width: 200px !important; text-align: left; vertical-align: middle; border-right: 3px solid #cbd5e1; font-size: 15px; } .factor-box { background: white; border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 10px; border-radius: 6px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #94a3b8; } .act-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; color: #92400e; } .flow-box { background: #3b82f6; color: white; padding: 15px; border-radius: 6px; font-weight: bold; text-align: center; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3); } .flow-arrow { position: absolute; right: -20px; top: 50%; transform: translateY(-50%); color: #3b82f6; font-size: 28px; z-index: 10; font-weight: bold; }</style></head><body>
   <h1>2-Axis Swiss Cheese RCA Diagram</h1>
   <p>Incident: ${document.getElementById('rcaIncNo').value || '-'} | Risk: ${document.getElementById('rcaDesc').value || '-'}</p>
   <div class="matrix-container"><table>
@@ -645,7 +679,7 @@ function visualizeDiagram() {
       <tr class="row-tier2"><td class="label-cell" style="color:#16a34a;">Tier 2<br><small style="color:#14532d;font-weight:normal;">Nature of Work / Team</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 2, '#10b981')}</td>`).join('')}</tr>
       <tr class="row-tier1"><td class="label-cell" style="color:#2563eb;">Tier 1<br><small style="color:#1e3a8a;font-weight:normal;">Individual / Patient Factor</small></td>${columns.map(col => `<td>${getFactorsHTML(col.factors, 1, '#3b82f6')}</td>`).join('')}</tr>
       <tr class="row-act"><td class="label-cell" style="color:#be185d;">Unsafe Act /<br>Potential Change</td>${columns.map(col => `<td><div class="act-box">${col.actName}</div></td>`).join('')}</tr>
-      <tr class="row-flow"><td class="label-cell" style="color:#1f2937;">Flow of Steps</td>${columns.map((col, idx) => `<td style="vertical-align: middle;"><div class="flow-box">${col.flowName}${idx < columns.length - 1 ? '<div class="flow-arrow">➔</div>' : ''}</div></td>`).join('')}</tr>
+      <tr class="row-flow">${flowRowHtml}</tr>
     </table></div>
   <div style="text-align: center; margin-top: 30px;"><button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">🖨️ สั่งพิมพ์ (Print)</button></div>
   </body></html>`;
