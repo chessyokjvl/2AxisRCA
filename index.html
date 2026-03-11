@@ -10,99 +10,151 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <style>
-  /* ================= BASE ================= */
+  /* ================= BASE & LAYOUT ================= */
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Sarabun', Arial, sans-serif; }
   body { background: #f0f2f5; color: #333; overflow-x: hidden; }
-  .topbar { background: #1e40af; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-  .app-container { display: flex; margin-top: 50px; min-height: calc(100vh - 50px); }
-  .sidebar { width: 250px; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 20px 0; position: fixed; height: 100%; z-index: 99; overflow-y: auto; transition: 0.3s; }
-  .menu-item { padding: 12px 20px; font-weight: 600; cursor: pointer; color: #4b5563; display: flex; align-items: center; gap: 10px; transition: 0.2s; border-left: 4px solid transparent; font-size: 15px;}
+  
+  .topbar { background: #1e40af; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 105; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .app-container { display: flex; margin-top: 55px; min-height: calc(100vh - 55px); }
+  
+  /* Sidebar Styles */
+  .sidebar { width: 260px; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 20px 0; position: fixed; height: 100%; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+  .menu-item { padding: 14px 20px; font-weight: 600; cursor: pointer; color: #4b5563; display: flex; align-items: center; gap: 10px; transition: 0.2s; border-left: 4px solid transparent; font-size: 15px;}
   .menu-item:hover, .menu-item.active { background: #eff6ff; color: #1e40af; border-left: 4px solid #1e40af; }
   .menu-admin { color: #b91c1c; border-bottom: 1px solid #fee2e2; }
-  .main-content { margin-left: 250px; padding: 20px; width: calc(100% - 250px); }
+  .main-content { margin-left: 260px; padding: 20px; width: calc(100% - 260px); transition: margin 0.3s ease; }
   
-  .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 20px; overflow-x: auto;}
-  h1 { color: #1e40af; font-size: 22px; margin-bottom: 8px; } h2 { color: #1e40af; font-size: 18px; margin-bottom: 16px; }
+  .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99; }
+  .hamburger { background: none; border: none; color: white; font-size: 24px; cursor: pointer; display: none; margin-right: 15px;}
   
-  .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center;}
-  .btn-primary { background: #3b82f6; color: white; } .btn-success { background: #10b981; color: white; } .btn-warning { background: #f59e0b; color: #1f2937; font-weight: bold;} .btn-danger { background: #ef4444; color: white; } .btn-purple { background: #8b5cf6; color: white; } .btn-cloud { background: #0f766e; color: white; font-weight: bold; }
+  /* ================= UI COMPONENTS ================= */
+  .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 20px; width: 100%; overflow: hidden;}
+  h1 { color: #1e40af; font-size: 22px; margin-bottom: 8px; line-height: 1.3;} 
+  h2 { color: #1e40af; font-size: 18px; margin-bottom: 16px; }
+  
+  .btn { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap:5px;}
+  .btn-primary { background: #3b82f6; color: white; } .btn-success { background: #10b981; color: white; } .btn-warning { background: #f59e0b; color: #1f2937; font-weight: bold;} .btn-danger { background: #ef4444; color: white; } .btn-purple { background: #8b5cf6; color: white; } .btn-cloud { background: #0f766e; color: white; }
   .btn-sm { padding: 6px 10px; font-size: 12px; }
   
-  .form-group { margin-bottom: 16px; } label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #374151; }
-  input, textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #f8fafc; outline: none; transition: 0.2s;}
+  .form-group { margin-bottom: 16px; width: 100%; } 
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #374151; }
+  input, textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #f8fafc; outline: none; transition: 0.2s; font-family: 'Sarabun', sans-serif;}
   input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; } .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
   
-  .checkbox-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; } 
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+  
+  /* Severity Logic */
+  .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
   .sev-btn { padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; background: white; transition: 0.2s; } 
   .sev-btn.active { border-color: #f59e0b; background: #fef3c7; color: #b45309; transform: scale(1.05); }
 
   /* Dashboard */
   .filter-bar { background: #e0e7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-bar > div { flex: 1; min-width: 150px; }
   .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
   .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; border-bottom: 4px solid #3b82f6; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
   .stat-card.green { border-bottom-color: #10b981; } .stat-card.orange { border-bottom-color: #f59e0b; } .stat-card.purple { border-bottom-color: #8b5cf6; }
-  .stat-num { font-size: 28px; font-weight: bold; color: #1e40af; margin-top: 10px; } .stat-sub { font-size: 12px; color: #6b7280; font-weight:bold; }
+  .stat-num { font-size: 28px; font-weight: bold; color: #1e40af; margin-top: 10px; } .stat-sub { font-size: 12px; color: #6b7280; font-weight:bold; line-height: 1.4;}
 
-  /* Tables */
-  .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
+  /* Tables Responsive */
+  .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; -webkit-overflow-scrolling: touch;}
   table { width: 100%; border-collapse: collapse; min-width: 800px; background: white;}
-  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 14px;}
-  th { background-color: #f8fafc; font-weight: 600; color: #475569; user-select: none; }
+  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 14px; vertical-align: middle;}
+  th { background-color: #f8fafc; font-weight: 600; color: #475569; user-select: none; white-space: nowrap;}
   th.sortable:hover { background-color: #e2e8f0; cursor: pointer; }
   tr.main-row:hover { background-color: #f1f5f9; }
-  .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+  .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; white-space: nowrap;}
   .bg-green { background: #dcfce7; color: #166534; } .bg-yellow { background: #fef9c3; color: #854d0e; } .bg-red { background: #fee2e2; color: #991b1b; }
   
-  .nested-table { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow:hidden;}
-  .nested-table th { background: #e0e7ff; font-size: 13px; } .nested-table td { font-size: 13px; }
+  .nested-table { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow-x:auto;}
+  .nested-table table { min-width: 600px; }
+  .nested-table th { background: #e0e7ff; font-size: 13px; padding: 8px 12px;} .nested-table td { font-size: 13px; padding: 8px 12px;}
 
-  /* RCA Form UI */
+  /* RCA Form & Flow UI */
   .flow-item { border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 16px 0; background: #eff6ff; }
-  .flow-header { background: #3b82f6; color: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .flow-header { background: #3b82f6; color: white; padding: 12px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
   .unsafe-act { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 10px 0; border-radius: 6px; }
-  .unsafe-header { background: #fde68a; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
-  .factor-item { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; margin: 8px 0; font-size: 13px; }
+  .unsafe-header { background: #fde68a; padding: 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+  .factor-item { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin: 8px 0; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;}
+  .factor-content { flex: 1; min-width: 200px; word-break: break-word;}
+  .factor-actions { display: flex; gap: 5px; align-items: flex-start; }
+  
   .barrier-tag { display: inline-block; background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 11px; border: 1px solid #fca5a5; }
   
+  /* Tier Colors */
   .tier-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
   .tier-1, .btn.tier-1 { background-color: #3b82f6 !important; color: white !important; } .btn.tier-1:hover { background-color: #2563eb !important; }
   .tier-2, .btn.tier-2 { background-color: #10b981 !important; color: white !important; } .btn.tier-2:hover { background-color: #059669 !important; }
   .tier-3, .btn.tier-3 { background-color: #f59e0b !important; color: white !important; } .btn.tier-3:hover { background-color: #d97706 !important; }
   .tier-4, .btn.tier-4 { background-color: #ef4444 !important; color: white !important; } .btn.tier-4:hover { background-color: #dc2626 !important; }
 
-  /* ================= NEW MINIMAL CAUSE/BARRIER UX ================= */
-  .cause-row { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 15px; margin-bottom: 6px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; }
+  /* Minimalist Multi-Select CSS */
+  .cause-row { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 12px; margin-bottom: 6px; border-radius: 8px; transition: 0.2s; }
   .cause-row:hover { background: #f1f5f9; }
-  .cause-row.selected { background: #eff6ff; border-color: #3b82f6; box-shadow: 0 2px 4px rgba(59,130,246,0.15); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-  .cause-text { font-size: 14px; font-weight: bold; color: #1e293b; margin-left: 8px; cursor: pointer; width: 100%; display: flex; justify-content: space-between;}
-  .cause-en { font-size: 12px; color: #94a3b8; font-weight: normal; }
+  .cause-row.selected { background: #eff6ff; border-color: #3b82f6; box-shadow: 0 2px 4px rgba(59,130,246,0.15); }
+  .cause-text { font-size: 14px; font-weight: bold; color: #1e293b; margin-left: 8px; cursor: pointer; flex: 1; word-break: break-word; line-height: 1.4;}
+  .cause-en { font-size: 12px; color: #94a3b8; font-weight: normal; display: block; margin-top: 2px;}
   
-  .barrier-container { background: #fff1f2; border: 1px solid #fecdd3; border-top: none; border-left: 4px solid #e11d48; padding: 12px 15px; margin: 0 0 10px 0; border-radius: 0 0 8px 8px; display: none; }
+  .barrier-container { background: #fff1f2; border: 1px solid #fecdd3; border-top: none; border-left: 4px solid #e11d48; padding: 12px; margin: 0 0 10px 0; border-radius: 0 0 8px 8px; display: none; }
   .barrier-container.open { display: block; animation: slideDown 0.2s ease-out; }
   @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
   
-  .bar-item { display: inline-flex; align-items: center; margin-right: 15px; margin-bottom: 8px; font-size: 13px; color: #9f1239; cursor: pointer; }
-  .bar-item input { margin-right: 6px; transform: scale(1.1); }
+  .bar-item { display: inline-flex; align-items: flex-start; margin-right: 15px; margin-bottom: 8px; font-size: 13px; color: #9f1239; cursor: pointer; line-height: 1.4;}
+  .bar-item input { margin-right: 6px; margin-top: 2px; transform: scale(1.1); flex-shrink: 0;}
   
-  .input-minimal { width: 100%; border: none; border-bottom: 1px solid #fca5a5; background: transparent; padding: 6px 0; font-size: 13px; outline: none; margin-bottom: 8px; color: #881337; transition: 0.2s;}
+  .input-minimal { width: 100%; border: none; border-bottom: 1px solid #fca5a5; background: transparent; padding: 8px 0; font-size: 13px; outline: none; margin-bottom: 8px; color: #881337; transition: 0.2s;}
   .input-minimal::placeholder { color: #fda4af; } .input-minimal:focus { border-bottom-color: #e11d48; }
   .input-sol { border-bottom-color: #6ee7b7; color: #065f46; } .input-sol::placeholder { color: #6ee7b7; } .input-sol:focus { border-bottom-color: #10b981; }
 
   /* Modals */
   .hidden { display: none !important; }
   .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); z-index: 999; backdrop-filter: blur(2px);}
-  .form-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 16px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3); z-index: 1000; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s ease-out; }
+  .form-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 16px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3); z-index: 1000; width: 92%; max-width: 600px; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s ease-out; }
   @keyframes popIn { from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+  /* ================= RESPONSIVE MOBILE TWEAKS ================= */
+  @media (max-width: 768px) {
+    .hamburger { display: block; } 
+    .sidebar { transform: translateX(-100%); } 
+    .sidebar.open { transform: translateX(0); }
+    .sidebar.open ~ .mobile-overlay { display: block; } 
+    .main-content { margin-left: 0; width: 100%; padding: 15px; }
+    .auth-panel span { display: none; } 
+    
+    .grid-2, .grid-4 { grid-template-columns: 1fr !important; gap: 10px;}
+    .checkbox-grid { grid-template-columns: repeat(5, 1fr); }
+    
+    .filter-bar { flex-direction: column; align-items: stretch !important; padding: 12px;} 
+    .filter-bar > div, .filter-bar > button { width: 100%; margin-bottom: 5px;}
+    .filter-bar > button { margin-top: 5px; height: 45px;}
+    
+    h1 { font-size: 20px !important; }
+    .card { padding: 15px; }
+    
+    /* Make RCA Action buttons stack on mobile */
+    .flow-header, .unsafe-header { flex-direction: column; align-items: flex-start; }
+    .flow-header > div:last-child, .unsafe-header > div:last-child { margin-left: 0; margin-top: 10px; display: flex; width: 100%; gap: 5px; }
+    .flow-header > div:last-child button, .unsafe-header > div:last-child button { flex: 1; }
+    
+    .factor-item { flex-direction: column; }
+    .factor-actions { margin-left: 0; margin-top: 10px; width: 100%; flex-direction: row; }
+    .factor-actions button { flex: 1; }
+    
+    .form-popup { padding: 20px 15px; width: 95%; }
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div style="font-weight: bold; font-size: 18px; letter-spacing: 0.5px;">JVL RCA Management</div>
-  <div style="display:flex; align-items:center; gap:10px;">
+  <div style="display:flex; align-items:center;">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <div style="font-weight: bold; font-size: 18px; letter-spacing: 0.5px;">JVL RCA Management</div>
+  </div>
+  <div class="auth-panel" style="display:flex; align-items:center; gap:10px;">
     <span id="userGreeting" style="font-size:14px; font-weight:500;">สถานะ: Guest</span>
-    <button class="btn btn-warning btn-sm" id="loginBtn" onclick="openLoginForm()" style="color: black; padding: 6px 12px;">Login</button>
+    <button class="btn btn-warning btn-sm" id="loginBtn" onclick="openLoginForm()" style="color: black; padding: 6px 12px;">Login เข้าสู่ระบบ</button>
     <button class="btn btn-danger btn-sm hidden" id="logoutBtn" onclick="logout()" style="padding: 6px 12px;">Logout</button>
   </div>
 </div>
@@ -119,15 +171,16 @@
       <div class="menu-item menu-admin" onclick="switchView('adminDeptView', this)">🏢 จัดการหน่วยงาน</div>
     </div>
   </div>
+  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
 
   <div class="main-content">
     
     <div id="dashboardView">
       <div class="filter-bar">
-        <div style="flex:1;"><label>หน่วยงาน</label><select id="filterDept"><option value="all">ทุกหน่วยงาน</option></select></div>
-        <div style="flex:1;"><label>ปีงบประมาณ</label><select id="filterFY"></select></div>
-        <div style="flex:1;"><label>ตั้งแต่วันที่</label><input type="date" id="filterStart"></div>
-        <div style="flex:1;"><label>ถึงวันที่</label><input type="date" id="filterEnd"></div>
+        <div><label>หน่วยงาน</label><select id="filterDept"><option value="all">ทุกหน่วยงาน</option></select></div>
+        <div><label>ปีงบประมาณ</label><select id="filterFY"></select></div>
+        <div><label>ตั้งแต่วันที่</label><input type="date" id="filterStart"></div>
+        <div><label>ถึงวันที่</label><input type="date" id="filterEnd"></div>
         <button class="btn btn-primary" onclick="renderDashboard()" style="height: 42px; margin-top:auto;">🔍 กรองข้อมูล</button>
       </div>
       
@@ -151,14 +204,14 @@
 
     <div id="incidentListView" class="hidden">
       <div class="card">
-        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; margin-bottom:15px; align-items:center;">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; margin-bottom:15px; align-items:center; gap:10px;">
             <h1>ทะเบียนอุบัติการณ์ทั้งหมด</h1>
             <button class="btn btn-cloud" onclick="fetchAllData()">🔄 รีเฟรชข้อมูลล่าสุด</button>
         </div>
-        <div class="filter-bar" style="padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; gap: 15px; align-items:center;">
-          <div style="flex:1;"><label>ปีงบประมาณ</label><select id="fltIncFY" onchange="renderIncidentTable()"></select></div>
-          <div style="flex:1;"><label>หน่วยงาน</label><select id="fltIncDept" placeholder="ค้นหาหน่วยงาน..."></select></div>
-          <div style="flex:1;"><label>สถานะ</label><select id="fltIncStatus" onchange="renderIncidentTable()"><option value="all">ทุกสถานะ</option><option value="รอทำ RCA">รอทำ RCA</option><option value="ทำ RCA แล้ว">ทำ RCA แล้ว</option></select></div>
+        <div class="filter-bar" style="background: #f8fafc; border: 1px solid #e2e8f0; align-items:center;">
+          <div><label>ปีงบประมาณ</label><select id="fltIncFY" onchange="renderIncidentTable()"></select></div>
+          <div><label>หน่วยงาน</label><select id="fltIncDept" placeholder="ค้นหาหน่วยงาน..."></select></div>
+          <div><label>สถานะ</label><select id="fltIncStatus" onchange="renderIncidentTable()"><option value="all">ทุกสถานะ</option><option value="รอทำ RCA">รอทำ RCA</option><option value="ทำ RCA แล้ว">ทำ RCA แล้ว</option></select></div>
           <div style="flex:2;"><label>ค้นหา (เลขที่/รายการ)</label><input type="text" id="fltIncSearch" placeholder="พิมพ์คำค้นหา..." onkeyup="renderIncidentTable()"></div>
         </div>
         
@@ -166,7 +219,7 @@
           <table id="incTable">
             <thead>
               <tr>
-                <th class="sortable" onclick="sortIncTable('date')" style="width:110px;">วันที่เกิดเหตุ <span id="sort_date">▼</span></th>
+                <th class="sortable" onclick="sortIncTable('date')" style="width:110px;">วันที่ <span id="sort_date">▼</span></th>
                 <th class="sortable" onclick="sortIncTable('no')" style="width:120px;">เลขที่ <span id="sort_no"></span></th>
                 <th style="min-width: 200px;">รายการความเสี่ยง</th>
                 <th class="sortable" onclick="sortIncTable('severity')" style="width:90px;">รุนแรง <span id="sort_severity"></span></th>
@@ -192,22 +245,22 @@
       <div class="card">
         <div class="form-group"><label>ค้นหาทะเบียนที่รอทำ RCA</label><select id="incidentSelect" placeholder="พิมพ์ค้นหา..."></select></div>
         <div class="grid-2">
-          <div class="form-group"><label>เลขที่ใบอุบัติการณ์</label><input type="text" id="rcaIncNo" readonly></div>
+          <div class="form-group"><label>เลขที่ใบอุบัติการณ์</label><input type="text" id="rcaIncNo" readonly style="background:#f3f4f6; border-color:#e2e8f0;"></div>
           <div class="form-group"><label>ระดับความรุนแรง (E-I)</label><div class="checkbox-grid" id="severityLevel"></div></div>
         </div>
-        <div class="form-group"><label>รายการความเสี่ยง</label><textarea id="rcaDesc" rows="2" readonly></textarea></div>
+        <div class="form-group"><label>รายการความเสี่ยง</label><textarea id="rcaDesc" rows="2" readonly style="background:#f3f4f6; border-color:#e2e8f0;"></textarea></div>
         <div class="grid-2">
-          <div class="form-group"><label>วันที่เกิดเหตุ</label><input type="date" id="rcaDate" readonly></div>
+          <div class="form-group"><label>วันที่เกิดเหตุ</label><input type="date" id="rcaDate" readonly style="background:#f3f4f6; border-color:#e2e8f0;"></div>
           <div class="form-group"><label>วันที่วิเคราะห์</label><input type="date" id="rcaAnaDate"></div>
         </div>
         <div class="grid-2">
-          <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><input type="text" id="rcaDept" readonly></div>
+          <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><input type="text" id="rcaDept" readonly style="background:#f3f4f6; border-color:#e2e8f0;"></div>
           <div class="form-group"><label>หน่วยงานที่ร่วมวิเคราะห์</label><select id="participatingDepts" multiple placeholder="พิมพ์เลือกได้หลายหน่วยงาน..."></select></div>
         </div>
       </div>
       <div id="flowsContainer"></div>
       <div class="card" style="text-align: center;">
-        <button class="btn btn-primary" onclick="openFlowForm()" style="width: 100%; max-width: 300px; padding: 14px; font-size: 16px;">➕ เพิ่ม Flow of Step</button>
+        <button class="btn btn-primary" onclick="openFlowForm()" style="width: 100%; max-width: 300px; padding: 14px; font-size: 16px; font-weight:bold;">➕ เพิ่ม Flow of Step</button>
       </div>
     </div>
 
@@ -223,15 +276,15 @@
           <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><select id="newIncDept"></select></div>
         </div>
         <div class="form-group"><label>รายการความเสี่ยง</label><textarea id="newIncDesc" rows="3" placeholder="อธิบายเหตุการณ์โดยสรุป..."></textarea></div>
-        <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="saveNewIncident()">บันทึกเข้าระบบ</button>
+        <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px; font-weight:bold;" onclick="saveNewIncident()">บันทึกเข้าระบบ</button>
       </div>
     </div>
 
     <div id="adminDeptView" class="hidden">
       <div class="card" style="max-width: 800px; margin: 0 auto;">
         <h1>จัดการหน่วยงาน (Admin)</h1>
-        <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom: 20px;">
-            <div style="flex:1;"><label>เพิ่มรายชื่อหน่วยงานใหม่</label><input type="text" id="newDeptName" placeholder="ระบุชื่อหน่วยงาน..."></div>
+        <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom: 20px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:200px;"><label>เพิ่มรายชื่อหน่วยงานใหม่</label><input type="text" id="newDeptName" placeholder="ระบุชื่อหน่วยงาน..."></div>
             <button class="btn btn-primary" style="height:42px; padding: 0 20px;" onclick="saveNewDepartment()">➕ เพิ่ม</button>
         </div>
         <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
@@ -252,7 +305,6 @@
 <div id="formContainer"></div>
 
 <script>
-// ================= GLOBAL VARIABLES =================
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_yeyz6WIqC7M-1ndmeVxfftdqqY8oFw0v3hbO36vTgzufY376gz3TDSSbToLCVdW2/exec";
 let currentUser = null, userRole = null;
 let db = { depts:[], incidents:[], rcas:[], barriers:[] }; 
@@ -262,7 +314,6 @@ let chartStatus;
 let incSortCol = 'date', incSortAsc = false;
 let isEditingExistingRCA = false;
 let editingFlowIdx = -1, editingAct = { fIdx: -1, aIdx: -1 };
-
 let tsIncident, tsAdminDept, tsFilterDept, tsPartDept, tsFltIncDept;
 
 // DATABASE 
@@ -390,16 +441,15 @@ function autoFillIncidentData(no) {
 function switchView(id, el) {
   document.querySelectorAll('.main-content>div').forEach(e=>e.classList.add('hidden')); document.getElementById(id).classList.remove('hidden');
   document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active')); el.classList.add('active');
+  if(window.innerWidth <= 768) toggleSidebar();
   if(id === 'dashboardView') renderDashboard();
   if(id === 'incidentListView') renderIncidentTable();
   if(id === 'adminDeptView') renderManageDeptTable();
   if(id === 'formView' && !isEditingExistingRCA) { document.getElementById('rcaModeText').textContent = "โหมด: สร้างใหม่"; }
 }
-function toggleSidebar() { 
-  document.querySelector('.sidebar').classList.toggle('open'); 
-}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobileOverlay').classList.toggle('hidden'); }
 
-// ================= INCIDENT LIST & FIX EDIT BUTTONS =================
+// ================= INCIDENT LIST (WITH EDIT & DIAGRAM) =================
 function sortIncTable(col) {
   if(incSortCol === col) incSortAsc = !incSortAsc; else { incSortCol = col; incSortAsc = true; }
   ['date', 'no', 'severity', 'dept', 'status'].forEach(c => document.getElementById('sort_' + c).innerHTML = '');
@@ -414,7 +464,7 @@ function renderIncidentTable() {
   let filtered = db.incidents.filter(inc => ['E','F','G','H','I'].includes(inc.severity.trim()));
   
   filtered = filtered.filter(inc => {
-    let matchStat = (statFilter === 'all') || (inc.status === statFilter); let matchSearch = (!search) || (inc.no.toLowerCase().includes(search) || inc.desc.toLowerCase().includes(search));
+    let matchStat = (statFilter === 'all') || (inc.status === statFilter); let matchSearch = (!search) || (String(inc.no).toLowerCase().includes(search) || inc.desc.toLowerCase().includes(search));
     let matchDept = (deptFilter === 'all') || (inc.dept === deptFilter);
     let d = new Date(inc.date); let fy = (d.getMonth() + 1 >= 10) ? d.getFullYear() + 1 + 543 : d.getFullYear() + 543;
     let matchFY = (fyFilter === 'all') || (fy.toString() === fyFilter);
@@ -438,12 +488,11 @@ function renderIncidentTable() {
     if(inc.status === 'รอทำ RCA') {
       btnAction = `<button class="btn btn-sm btn-primary" onclick="goToRCA('${inc.no}')" style="margin:2px;">➕ ทำ RCA</button>`;
     } else {
-      // แก้ไขปัญหา: ใช้ String ในการเรียกฟังก์ชันป้องกันบั๊ก
       btnAction = `<button class="btn btn-sm btn-warning" onclick="editRCA('${String(inc.no)}')" style="margin:2px;">✏️ แก้ไข RCA</button> 
                    <button class="btn btn-sm btn-purple" onclick="viewDiagramFromList('${String(inc.no)}')" style="margin:2px;">🎨 ดู Diagram</button>`;
     }
     
-    let incBars = db.barriers.filter(b => b.incNo === inc.no);
+    let incBars = db.barriers.filter(b => String(b.incNo) === String(inc.no));
     let btnToggleBar = inc.status === 'ทำ RCA แล้ว' ? `<button class="btn btn-sm" style="background:#334155;color:white;margin:2px;" onclick="toggleBarrierRow('${inc.no}')">ด่านกั้น (${incBars.length})</button>` : '';
 
     let html = `<tr class="main-row"><td>${dStr}</td><td><strong>${inc.no}</strong></td><td>${inc.desc}</td><td>${inc.severity}</td><td>${inc.dept}</td><td><span class="badge ${badge}">${inc.status}</span></td><td><div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">${btnAction} ${btnToggleBar} ${btnDelRca} ${btnDelInc}</div></td></tr>`;
@@ -519,7 +568,7 @@ function renderDashboard() {
   });
 }
 
-// ================= EDIT RCA & VIEW DIAGRAM (FIXED) =================
+// ================= ACTIONS & RCA EDITING =================
 function goToRCA(no) { 
   isEditingExistingRCA = false; tsIncident.setValue(no); 
   document.getElementById('rcaModeText').textContent = "โหมด: สร้างใหม่"; 
@@ -610,7 +659,7 @@ async function doLogin() {
 function logout() { currentUser = null; userRole = null; location.reload(); }
 function closeAllForms() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('formContainer').innerHTML = ''; }
 
-// ================= RCA FLOW BUILDER (MINIMAL MULTI-SELECT) =================
+// ================= RCA FLOW BUILDER =================
 function openFlowForm(e = -1) {
   editingFlowIdx = e; let v = e > -1 ? data.flows[e].name : ''; let t = e > -1 ? 'แก้ไขขั้นตอน' : 'เพิ่มขั้นตอน (Flow)';
   document.getElementById('formContainer').innerHTML = `<div class="form-popup"><h2>${t}</h2><div class="form-group"><input type="text" id="flowName" value="${v}" onkeypress="if(event.key==='Enter') saveFlow()"></div><button class="btn btn-primary" onclick="saveFlow()">บันทึก (Enter)</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
@@ -633,7 +682,7 @@ function saveAct() {
   closeAllForms(); renderFlows();
 }
 
-// 🎯 NEW MINIMAL UX
+// 🎯 NEW MINIMAL UX (CLEAN FOLDERS)
 let fState = { fIdx:-1, aIdx:-1, isEditMode:false, editFacIdx:-1, tier:0, group:0, causeMap:{} };
 
 function openFactorForm(f, a, facIdx = -1) {
@@ -648,7 +697,7 @@ function openFactorForm(f, a, facIdx = -1) {
 
 function renderMultiFactorForm() {
   let h = `<div class="form-popup" style="max-height:90vh; overflow-y:auto; max-width:700px; padding: 25px;">
-    <h2 style="margin-bottom:15px; border-bottom:2px solid #e0e7ff; padding-bottom:10px; color:#1e40af;">🎯 ${fState.isEditMode ? 'แก้ไขปัจจัย' : 'เพิ่มปัจจัยเชิงระบบ (เลือกสาเหตุได้หลายข้อ)'}</h2>`;
+    <h2 style="margin-bottom:15px; border-bottom:2px solid #e0e7ff; padding-bottom:10px; color:#1e40af;">🎯 ${fState.isEditMode ? 'แก้ไขปัจจัย' : 'เพิ่มปัจจัยเชิงระบบ (เลือกได้หลายข้อ)'}</h2>`;
   
   h += `<div class="form-group"><label>1️⃣ เลือก Tier</label><div class="grid-4" style="gap:8px;">`;
   rcaDatabase.tiers.forEach(t => {
