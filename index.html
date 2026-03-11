@@ -10,104 +10,93 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <style>
-  /* ================= BASE & MOBILE LAYOUT ================= */
+  /* ================= BASE ================= */
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Sarabun', Arial, sans-serif; }
   body { background: #f0f2f5; color: #333; overflow-x: hidden; }
-  
-  .topbar { background: #1e40af; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 105; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-  .app-container { display: flex; margin-top: 55px; min-height: calc(100vh - 55px); }
-  
-  /* Sidebar Styles */
-  .sidebar { width: 260px; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 20px 0; position: fixed; height: 100%; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
-  .menu-item { padding: 14px 20px; font-weight: 600; cursor: pointer; color: #4b5563; display: flex; align-items: center; gap: 10px; transition: 0.2s; border-left: 4px solid transparent; font-size: 15px;}
+  .topbar { background: #1e40af; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .app-container { display: flex; margin-top: 50px; min-height: calc(100vh - 50px); }
+  .sidebar { width: 250px; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 20px 0; position: fixed; height: 100%; z-index: 99; overflow-y: auto; transition: 0.3s; }
+  .menu-item { padding: 12px 20px; font-weight: 600; cursor: pointer; color: #4b5563; display: flex; align-items: center; gap: 10px; transition: 0.2s; border-left: 4px solid transparent; font-size: 15px;}
   .menu-item:hover, .menu-item.active { background: #eff6ff; color: #1e40af; border-left: 4px solid #1e40af; }
   .menu-admin { color: #b91c1c; border-bottom: 1px solid #fee2e2; }
-  .main-content { margin-left: 260px; padding: 20px; width: calc(100% - 260px); transition: margin 0.3s ease; }
+  .main-content { margin-left: 250px; padding: 20px; width: calc(100% - 250px); }
   
-  .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99; }
-  .hamburger { background: none; border: none; color: white; font-size: 24px; cursor: pointer; display: none; margin-right: 15px;}
-  
-  @media (max-width: 768px) {
-    .hamburger { display: block; } .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); }
-    .sidebar.open ~ .mobile-overlay { display: block; } .main-content { margin-left: 0; width: 100%; padding: 15px; }
-    .auth-panel span { display: none; } .grid-2, .grid-4 { grid-template-columns: 1fr !important; }
-    .filter-bar { flex-direction: column; align-items: stretch !important; } .filter-bar > div, .filter-bar > button { width: 100%; }
-  }
-
-  /* ================= UI COMPONENTS ================= */
   .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 20px; overflow-x: auto;}
   h1 { color: #1e40af; font-size: 22px; margin-bottom: 8px; } h2 { color: #1e40af; font-size: 18px; margin-bottom: 16px; }
   
-  .btn { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap:5px;}
-  .btn-primary { background: #3b82f6; color: white; } .btn-success { background: #10b981; color: white; } .btn-warning { background: #f59e0b; color: #1f2937; font-weight: bold;} .btn-danger { background: #ef4444; color: white; } .btn-purple { background: #8b5cf6; color: white; } .btn-cloud { background: #0f766e; color: white; }
-  .btn-sm { padding: 6px 10px; font-size: 12px; }
+  .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: 0.2s; }
+  .btn-primary { background: #3b82f6; color: white; } .btn-success { background: #10b981; color: white; } .btn-warning { background: #f59e0b; color: #1f2937; font-weight: bold;} .btn-danger { background: #ef4444; color: white; } .btn-purple { background: #8b5cf6; color: white; } .btn-cloud { background: #0f766e; color: white; font-weight: bold; }
   
   .form-group { margin-bottom: 16px; } label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #374151; }
-  input, textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #f8fafc; outline: none;}
-  input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; } .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+  input, textarea, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+  input:focus, textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; } .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
   
-  .checkbox-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .sev-btn { padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; background: white; transition: 0.2s; } 
+  /* Severity Logic */
+  .checkbox-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .sev-btn { padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; background: white; transition: 0.2s; } 
   .sev-btn.active { border-color: #f59e0b; background: #fef3c7; color: #b45309; transform: scale(1.05); }
 
   /* Dashboard */
-  .filter-bar { background: #e0e7ff; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-end; }
-  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+  .filter-bar { background: #e0e7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
   .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; border-bottom: 4px solid #3b82f6; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
   .stat-card.green { border-bottom-color: #10b981; } .stat-card.orange { border-bottom-color: #f59e0b; } .stat-card.purple { border-bottom-color: #8b5cf6; }
-  .stat-num { font-size: 32px; font-weight: bold; color: #1e40af; margin-top: 10px; } .stat-sub { font-size: 13px; color: #64748b; font-weight:bold; }
+  .stat-num { font-size: 28px; font-weight: bold; color: #1e40af; margin-top: 10px; } .stat-sub { font-size: 12px; color: #6b7280; font-weight:bold; }
 
-  /* Table Responsive */
-  .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
-  table { width: 100%; border-collapse: collapse; min-width: 800px; background: white;}
-  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 14px;}
-  th { background-color: #f8fafc; font-weight: 600; color: #475569; user-select: none; }
-  th.sortable:hover { background-color: #e2e8f0; }
-  tr.main-row:hover { background-color: #f1f5f9; }
-  .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; min-width: 800px; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 14px;}
+  th { background-color: #f9fafb; font-weight: 600; color: #4b5563; user-select: none; }
+  th.sortable:hover { background-color: #e5e7eb; cursor: pointer; }
+  tr.main-row:hover { background-color: #f3f4f6; }
+  .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
   .bg-green { background: #dcfce7; color: #166534; } .bg-yellow { background: #fef9c3; color: #854d0e; } .bg-red { background: #fee2e2; color: #991b1b; }
   
-  .nested-table { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow:hidden;}
-  .nested-table th { background: #e0e7ff; font-size: 13px; } .nested-table td { font-size: 13px; }
-  
-  /* Text Colors for Status */
-  .text-green { color: #16a34a; font-weight: bold; } .text-red { color: #dc2626; font-weight: bold; }
+  .nested-table { background: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow:hidden;}
+  .nested-table th { background: #e0e7ff; font-size: 12px; padding: 8px; }
+  .nested-table td { font-size: 13px; padding: 8px; }
 
   /* RCA Form & Flow UI */
   .flow-item { border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 16px 0; background: #eff6ff; }
-  .flow-header { background: #3b82f6; color: white; padding: 12px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .flow-header { background: #3b82f6; color: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
   .unsafe-act { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 10px 0; border-radius: 6px; }
-  .unsafe-header { background: #fde68a; padding: 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .unsafe-header { background: #fde68a; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
   .factor-item { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; margin: 8px 0; font-size: 13px; }
-  .barrier-tag { display: inline-block; background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 11px; border: 1px solid #fca5a5;}
+  .barrier-tag { display: inline-block; background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 11px; border: 1px solid #fca5a5; }
   
-  .tier-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+  /* Tier Colors 1-4 */
+  .tier-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 5px; }
   .tier-1, .btn.tier-1 { background-color: #3b82f6 !important; color: white !important; } 
   .tier-2, .btn.tier-2 { background-color: #10b981 !important; color: white !important; } 
   .tier-3, .btn.tier-3 { background-color: #f59e0b !important; color: white !important; } 
   .tier-4, .btn.tier-4 { background-color: #ef4444 !important; color: white !important; } 
 
+  /* ================= Minimalist Multi-Select CSS ================= */
+  .cause-list-item { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
+  .cause-list-item:last-child { border-bottom: none; }
+  .cause-header { display: flex; align-items: center; cursor: pointer; font-size: 14px; font-weight: bold; color: #334155; margin: 0; }
+  .cause-header input[type="checkbox"] { margin-right: 10px; transform: scale(1.2); }
+  .cause-body { margin-top: 8px; margin-left: 22px; padding-left: 12px; border-left: 2px solid #cbd5e1; display: none; }
+  .cause-body.open { display: block; }
+  .barrier-label { display: flex; align-items: flex-start; font-size: 13px; color: #475569; margin-bottom: 6px; cursor: pointer; line-height: 1.4; }
+  .barrier-label input { margin-right: 8px; margin-top: 2px; }
+  .minimal-input { width: 100%; border: none; border-bottom: 1px dashed #94a3b8; background: transparent; padding: 6px 0; font-size: 13px; outline: none; margin-bottom: 8px; transition: 0.2s; }
+  .minimal-input:focus { border-bottom-color: #3b82f6; }
+
   .hidden { display: none !important; }
   .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); z-index: 999; backdrop-filter: blur(2px);}
-  .form-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); z-index: 1000; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s ease-out; }
-  @keyframes popIn { from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-  
-  .cause-box { transition: 0.2s; }
-  .cause-box:hover { background: #f8fafc; }
+  .form-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div style="display:flex; align-items:center;">
-    <button class="hamburger" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: bold; font-size: 18px; letter-spacing: 0.5px;">JVL RCA Management</div>
-  </div>
-  <div class="auth-panel" style="display:flex; align-items:center; gap:10px;">
+  <div style="font-weight: bold; font-size: 18px; letter-spacing: 0.5px;">JVL RCA Management</div>
+  <div style="display:flex; align-items:center; gap:10px;">
     <span id="userGreeting" style="font-size:14px; font-weight:500;">สถานะ: Guest</span>
-    <button class="btn btn-warning btn-sm" id="loginBtn" onclick="openLoginForm()">Login เข้าระบบ</button>
-    <button class="btn btn-danger btn-sm hidden" id="logoutBtn" onclick="logout()">Logout</button>
+    <button class="btn btn-warning btn-sm" id="loginBtn" onclick="openLoginForm()" style="color: black; padding: 5px 10px;">Login</button>
+    <button class="btn btn-danger btn-sm hidden" id="logoutBtn" onclick="logout()" style="padding: 5px 10px;">Logout</button>
   </div>
 </div>
 
@@ -123,7 +112,6 @@
       <div class="menu-item menu-admin" onclick="switchView('adminDeptView', this)">🏢 จัดการหน่วยงาน</div>
     </div>
   </div>
-  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
 
   <div class="main-content">
     
@@ -133,7 +121,7 @@
         <div style="flex:1;"><label>ปีงบประมาณ</label><select id="filterFY"></select></div>
         <div style="flex:1;"><label>ตั้งแต่วันที่</label><input type="date" id="filterStart"></div>
         <div style="flex:1;"><label>ถึงวันที่</label><input type="date" id="filterEnd"></div>
-        <button class="btn btn-primary" onclick="renderDashboard()" style="height: 42px; margin-top:auto;">🔍 กรองข้อมูล</button>
+        <button class="btn btn-primary" onclick="renderDashboard()" style="height: 40px; margin-top:auto;">🔍 กรองข้อมูล</button>
       </div>
       
       <div class="dashboard-grid">
@@ -197,16 +185,16 @@
       <div class="card">
         <div class="form-group"><label>ค้นหาทะเบียนที่รอทำ RCA</label><select id="incidentSelect" placeholder="พิมพ์ค้นหา..."></select></div>
         <div class="grid-2">
-          <div class="form-group"><label>เลขที่ใบอุบัติการณ์</label><input type="text" id="rcaIncNo" readonly></div>
+          <div class="form-group"><label>เลขที่ใบอุบัติการณ์</label><input type="text" id="rcaIncNo" readonly style="background:#f3f4f6;"></div>
           <div class="form-group"><label>ระดับความรุนแรง (E-I)</label><div class="checkbox-grid" id="severityLevel"></div></div>
         </div>
-        <div class="form-group"><label>รายการความเสี่ยง</label><textarea id="rcaDesc" rows="2" readonly></textarea></div>
+        <div class="form-group"><label>รายการความเสี่ยง</label><textarea id="rcaDesc" rows="2" readonly style="background:#f3f4f6;"></textarea></div>
         <div class="grid-2">
-          <div class="form-group"><label>วันที่เกิดเหตุ</label><input type="date" id="rcaDate" readonly></div>
+          <div class="form-group"><label>วันที่เกิดเหตุ</label><input type="date" id="rcaDate" readonly style="background:#f3f4f6;"></div>
           <div class="form-group"><label>วันที่วิเคราะห์</label><input type="date" id="rcaAnaDate"></div>
         </div>
         <div class="grid-2">
-          <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><input type="text" id="rcaDept" readonly></div>
+          <div class="form-group"><label>หน่วยงานเจ้าภาพ</label><input type="text" id="rcaDept" readonly style="background:#f3f4f6;"></div>
           <div class="form-group"><label>หน่วยงานที่ร่วมวิเคราะห์</label><select id="participatingDepts" multiple placeholder="พิมพ์เลือกได้หลายหน่วยงาน..."></select></div>
         </div>
       </div>
@@ -268,6 +256,7 @@ let isEditingExistingRCA = false;
 let editingFlowIdx = -1, editingAct = { fIdx: -1, aIdx: -1 };
 let tsIncident, tsAdminDept, tsFilterDept, tsPartDept, tsFltIncDept;
 
+// DATABASE 
 var rcaDatabase = {
   tiers: [ {id:1,name:'Tier 1',label:'Individuals'}, {id:2,name:'Tier 2',label:'Work & Team'}, {id:3,name:'Tier 3',label:'Environment/Tech'}, {id:4,name:'Tier 4',label:'Management'} ],
   groups: {
@@ -316,6 +305,7 @@ var rcaDatabase = {
   ]
 };
 
+// ================= INIT =================
 window.onload = function() {
   document.getElementById('rcaAnaDate').value = new Date().toISOString().split('T')[0];
   initTomSelects(); generateFYOptions(); renderSeverityButtons();
@@ -397,7 +387,7 @@ function switchView(id, el) {
   if(id === 'adminDeptView') renderManageDeptTable();
   if(id === 'formView' && !isEditingExistingRCA) { document.getElementById('rcaModeText').textContent = "โหมด: สร้างใหม่"; }
 }
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobileOverlay').classList.toggle('hidden'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
 // ================= INCIDENT LIST (WITH EDIT & DIAGRAM) =================
 function sortIncTable(col) {
@@ -431,7 +421,6 @@ function renderIncidentTable() {
   filtered.forEach(inc => {
     let badge = inc.status === 'รอทำ RCA' ? 'bg-red' : 'bg-green'; let dStr = new Date(inc.date).toLocaleDateString('th-TH');
     
-    // ACTION BUTTONS
     let btnDelInc = userRole === 'Admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteIncident('${inc.no}', 'Inc')" style="margin:2px;">ลบเคส</button>` : '';
     let btnDelRca = userRole === 'Admin' && inc.status === 'ทำ RCA แล้ว' ? `<button class="btn btn-sm" style="background:#f43f5e;color:white; margin:2px;" onclick="deleteIncident('${inc.no}', 'RCA')">ลบ RCA</button>` : '';
     
@@ -479,56 +468,85 @@ function renderDashboard() {
     return matchDept && matchFY && matchDate;
   });
 
-  let totalInc = validInc.length; let totalDone = validInc.filter(i => i.status === 'ทำ RCA แล้ว').length; let pct = totalInc > 0 ? Math.round((totalDone/totalInc)*100) : 0;
-  let incNos = validInc.map(i => i.no); let validRCAs = db.rcas.filter(r => incNos.includes(r.no)); let validBars = db.barriers.filter(b => incNos.includes(b.incNo));
+  let totalInc = validInc.length; 
+  let totalDone = validInc.filter(i => i.status === 'ทำ RCA แล้ว').length;
+  let pct = totalInc > 0 ? Math.round((totalDone/totalInc)*100) : 0;
+  
+  let incNos = validInc.map(i => i.no);
+  let validRCAs = db.rcas.filter(r => incNos.includes(r.no));
+  let validBars = db.barriers.filter(b => incNos.includes(b.incNo));
 
   let spdSum = 0, spdCount = 0;
-  validRCAs.forEach(r => { if(r.incidentDate && r.analysisDate) { let days = (new Date(r.analysisDate) - new Date(r.incidentDate))/(1000*3600*24); if(days >= 0) { spdSum+=days; spdCount++; } } });
+  validRCAs.forEach(r => {
+    if(r.incidentDate && r.analysisDate) {
+      let days = (new Date(r.analysisDate) - new Date(r.incidentDate))/(1000*3600*24);
+      if(days >= 0) { spdSum+=days; spdCount++; }
+    }
+  });
 
-  let resBars = validBars.filter(b => b.status === 'แก้ไขแล้ว').length; let totBars = validBars.length; let barPct = totBars > 0 ? Math.round((resBars/totBars)*100) : 0;
+  let resBars = validBars.filter(b => b.status === 'แก้ไขแล้ว').length;
+  let totBars = validBars.length;
+  let barPct = totBars > 0 ? Math.round((resBars/totBars)*100) : 0;
 
-  document.getElementById('dInc').textContent = totalInc; document.getElementById('dPct').textContent = pct + '%'; document.getElementById('dSubRCA').textContent = `ทำแล้ว ${totalDone} จาก ${totalInc} เรื่อง`;
+  document.getElementById('dInc').textContent = totalInc;
+  document.getElementById('dPct').textContent = pct + '%';
+  document.getElementById('dSubRCA').textContent = `ทำแล้ว ${totalDone} จาก ${totalInc} เรื่อง`;
   document.getElementById('dSpd').textContent = spdCount > 0 ? Math.round(spdSum/spdCount) + ' วัน' : '0 วัน';
-  document.getElementById('dFac').textContent = barPct + '%'; document.getElementById('dSubFac').textContent = `แก้ไขแล้ว ${resBars} จาก ${totBars} รายการ`;
+  document.getElementById('dFac').textContent = barPct + '%';
+  document.getElementById('dSubFac').textContent = `แก้ไขแล้ว ${resBars} จาก ${totBars} รายการ`;
 
-  let deptC = {}; validInc.forEach(i => { if(i.dept) deptC[i.dept] = (deptC[i.dept]||0)+1; });
+  let deptC = {};
+  validInc.forEach(i => { if(i.dept) deptC[i.dept] = (deptC[i.dept]||0)+1; });
   let dh = ''; Object.entries(deptC).sort((a,b)=>b[1]-a[1]).forEach(x => { dh+=`<tr><td>${x[0]}</td><td style="text-align:center;font-weight:bold;">${x[1]}</td></tr>`; });
   document.getElementById('deptDashTableBody').innerHTML = dh;
 
   if(chartStatus) chartStatus.destroy();
-  chartStatus = new Chart(document.getElementById('statusChart'), { type: 'bar', data: { labels: ['ทำ RCA แล้ว', 'ยังไม่ทำ RCA'], datasets: [{ data: [totalDone, totalInc - totalDone], backgroundColor:['#10b981', '#ef4444']}] }, options: { indexAxis: 'y', plugins: { legend: {display:false} }, scales: { x: { beginAtZero: true, ticks:{stepSize:1} } } } });
+  chartStatus = new Chart(document.getElementById('statusChart'), { 
+    type: 'bar', 
+    data: { labels: ['ทำ RCA แล้ว', 'ยังไม่ทำ RCA'], datasets: [{ data: [totalDone, totalInc - totalDone], backgroundColor:['#10b981', '#ef4444']}] },
+    options: { indexAxis: 'y', plugins: { legend: {display:false} }, scales: { x: { beginAtZero: true, ticks:{stepSize:1} } } }
+  });
 }
 
-// ================= ACTIONS =================
-function goToRCA(no) { isEditingExistingRCA = false; tsIncident.setValue(no); document.getElementById('rcaModeText').textContent = "โหมด: สร้างใหม่"; switchView('formView', document.getElementById('menuRCA')); }
+// ================= ACTIONS & RCA EDITING =================
+function goToRCA(no) { 
+  isEditingExistingRCA = false; tsIncident.setValue(no); 
+  document.getElementById('rcaModeText').textContent = "โหมด: สร้างใหม่"; 
+  switchView('formView', document.getElementById('menuRCA')); 
+}
 
+// ฟังก์ชันสำหรับดึง RCA กลับมาแก้ไข
 function editRCA(no) {
   let rca = db.rcas.find(r => r.no === no); if(!rca) return;
   isEditingExistingRCA = true; document.getElementById('rcaModeText').textContent = "โหมด: แก้ไข RCA เดิม";
   autoFillIncidentData(no);
   if(rca.analysisDate) { let d = new Date(rca.analysisDate); if(!isNaN(d.getTime())) document.getElementById('rcaAnaDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   if(rca.participants) tsPartDept.setValue(rca.participants.split(', '));
-  try { data.flows = JSON.parse(rca.json); renderFlows(); } catch(e) { data.flows = []; renderFlows(); }
+  try { data.flows = JSON.parse(rca.json); } catch(e) { data.flows = []; }
+  renderFlows();
   switchView('formView', document.getElementById('menuRCA'));
 }
 
+// ฟังก์ชันสำหรับดู Diagram จากหน้าตารางโดยตรง
 function viewDiagramFromList(no) {
-  let rca = db.rcas.find(r => r.no === no); if(!rca) return; let flows = [];
-  try { flows = JSON.parse(rca.json); } catch(e) { return alert('ข้อมูลผิดพลาด'); }
+  let rca = db.rcas.find(r => r.no === no); if(!rca) return alert('ไม่พบข้อมูล RCA');
+  let flows = []; try { flows = JSON.parse(rca.json); } catch(e) { return alert('ข้อมูล Flow ผิดพลาด'); }
   let inc = db.incidents.find(i => i.no === no);
-  openDiagramWindow(flows, inc.no, inc.desc);
+  openDiagramWindow(flows, inc ? inc.no : no, inc ? inc.desc : '');
 }
 
 async function saveNewIncident() {
   const d = { no: document.getElementById('newIncNo').value, date: document.getElementById('newIncDate').value, severity: document.getElementById('newIncSev').value, dept: tsAdminDept.getValue(), desc: document.getElementById('newIncDesc').value };
   if(!d.no || !d.dept) return alert('ข้อมูลไม่ครบ');
-  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'registerIncident', data: d }) }); alert('ลงทะเบียนสำเร็จ'); fetchAllData();
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'registerIncident', data: d }) });
+  alert('ลงทะเบียนสำเร็จ'); fetchAllData();
   document.getElementById('newIncNo').value = ''; document.getElementById('newIncDesc').value = ''; tsAdminDept.clear(); 
 }
 
 async function saveNewDepartment() {
   const d = document.getElementById('newDeptName').value; if(!d) return;
-  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addDepartment', deptName: d }) }); alert('เพิ่มสำเร็จ'); fetchAllData(); document.getElementById('newDeptName').value = '';
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addDepartment', deptName: d }) });
+  alert('เพิ่มสำเร็จ'); fetchAllData(); document.getElementById('newDeptName').value = '';
 }
 async function editDept(old) { let n = prompt("แก้ไขชื่อ:", old); if(n && n !== old) { await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'editDepartment', oldName:old, newName:n }) }); fetchAllData(); } }
 async function delDept(name) { if(confirm(`ลบหน่วยงาน ${name}?`)) { await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDepartment', deptName:name }) }); fetchAllData(); } }
@@ -580,7 +598,7 @@ async function doLogin() {
 function logout() { currentUser = null; userRole = null; location.reload(); }
 function closeAllForms() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('formContainer').innerHTML = ''; }
 
-// ================= RCA FLOW BUILDER (MULTI-SELECT FACTOR UX) =================
+// ================= RCA FLOW BUILDER =================
 function openFlowForm(e = -1) {
   editingFlowIdx = e; let v = e > -1 ? data.flows[e].name : ''; let t = e > -1 ? 'แก้ไขขั้นตอน' : 'เพิ่มขั้นตอน (Flow)';
   document.getElementById('formContainer').innerHTML = `<div class="form-popup"><h2>${t}</h2><div class="form-group"><input type="text" id="flowName" value="${v}" onkeypress="if(event.key==='Enter') saveFlow()"></div><button class="btn btn-primary" onclick="saveFlow()">บันทึก (Enter)</button> <button class="btn" onclick="closeAllForms()">ยกเลิก</button></div>`;
@@ -603,7 +621,7 @@ function saveAct() {
   closeAllForms(); renderFlows();
 }
 
-// State สำหรับ Multi-select Factor
+// ================= MINIMALIST MULTI-SELECT FACTOR UX =================
 let fState = { fIdx:-1, aIdx:-1, isEditMode:false, editFacIdx:-1, tier:0, group:0, causeMap:{} };
 
 function openFactorForm(f, a, facIdx = -1) {
@@ -618,7 +636,7 @@ function openFactorForm(f, a, facIdx = -1) {
 
 function renderMultiFactorForm() {
   let h = `<div class="form-popup" style="max-height:85vh;overflow-y:auto; max-width:700px; padding: 20px;">
-    <h2 style="margin-bottom:15px; border-bottom:2px solid #e0e7ff; padding-bottom:10px;">🎯 ${fState.isEditMode ? 'แก้ไขปัจจัยเชิงระบบ' : 'เพิ่มปัจจัยเชิงระบบ (เลือกได้หลายข้อ)'}</h2>`;
+    <h2 style="margin-bottom:15px; border-bottom:2px solid #e0e7ff; padding-bottom:10px;">🎯 ${fState.isEditMode ? 'แก้ไขปัจจัยเชิงระบบ' : 'เพิ่มปัจจัยเชิงระบบ (เลือกสาเหตุได้หลายข้อ)'}</h2>`;
   
   h += `<div class="form-group"><label>1️⃣ เลือก Tier</label><div class="grid-4" style="gap:8px;">`;
   rcaDatabase.tiers.forEach(t => {
@@ -635,32 +653,27 @@ function renderMultiFactorForm() {
   }
 
   if(fState.group > 0) {
-    h += `<div class="form-group"><label>3️⃣ เลือกสาเหตุ (กางออกเพื่อเลือกด่านกั้น)</label><div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px; background:#f8fafc; max-height: 350px; overflow-y:auto;">`;
+    h += `<div class="form-group"><label>3️⃣ เลือกสาเหตุ (ติ๊กถูกเพื่อกางออก)</label><div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px; background:white; max-height: 350px; overflow-y:auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">`;
     let causes = rcaDatabase.causes.filter(c => c.groupId === fState.group);
     causes.forEach(c => {
       let cData = fState.causeMap[c.id] || { checked: false, bars: [], otherBar: '', sol: '' };
-      let bg = cData.checked ? 'background:#fef3c7; border:2px solid #f59e0b;' : 'background:white; border:1px solid #cbd5e1;';
+      let bg = cData.checked ? '#f8fafc' : 'transparent';
       
-      h += `<div class="cause-box" style="${bg} margin-bottom:8px; border-radius:8px; padding:12px;">`;
-      h += `<label style="display:flex; align-items:center; cursor:pointer; font-weight:bold; color:#1e40af; font-size:15px; margin:0;">
-              <input type="checkbox" ${cData.checked?'checked':''} onchange="toggleCauseCheck(${c.id}, this.checked)" style="width:18px;height:18px;margin-right:10px;">
-              ${c.thai} <span style="font-size:12px;color:#64748b;margin-left:5px;font-weight:normal;">(${c.en})</span>
-            </label>`;
-      
-      if(cData.checked) {
-        h += `<div style="margin-top:12px; padding-top:12px; border-top:1px dashed #f59e0b;">
-                <div style="font-size:13px; font-weight:bold; margin-bottom:8px; color:#92400e;">⚠️ เลือกด่านกั้นที่ล้มเหลว:</div>`;
-        c.barriers.forEach(b => {
-          let bChk = cData.bars.includes(b) ? 'checked' : '';
-          h += `<label style="display:flex; align-items:center; font-size:13px; margin-bottom:6px; cursor:pointer;">
-                  <input type="checkbox" ${bChk} onchange="toggleCauseBar(${c.id}, '${b.replace(/'/g,"\\'")}')" style="margin-right:8px;"> ${b}
-                </label>`;
-        });
-        h += `<input type="text" placeholder="ระบุด่านกั้นอื่นๆ..." value="${cData.otherBar}" oninput="fState.causeMap[${c.id}].otherBar=this.value" style="margin-top:8px; font-size:13px; padding:8px;">`;
-        h += `<textarea placeholder="ระบุมาตรการแก้ไข / แนวทางป้องกัน..." rows="2" oninput="fState.causeMap[${c.id}].sol=this.value" style="margin-top:8px; font-size:13px; padding:8px;">${cData.sol}</textarea>`;
-        h += `</div>`;
-      }
-      h += `</div>`;
+      h += `<div class="cause-list-item" style="background: ${bg}">
+              <label class="cause-header">
+                <input type="checkbox" ${cData.checked?'checked':''} onchange="toggleCauseCheck(${c.id}, this.checked)">
+                ${c.thai} <span style="font-size:12px; color:#94a3b8; margin-left:6px; font-weight:normal;">(${c.en})</span>
+              </label>
+              <div class="cause-body ${cData.checked ? 'open' : ''}">
+                <div style="font-size:12px; font-weight:bold; color:#b45309; margin-bottom:6px;">⚠️ เลือกด่านกั้นที่ล้มเหลว (ถ้ามี):</div>`;
+      c.barriers.forEach(b => {
+        let bChk = cData.bars.includes(b) ? 'checked' : '';
+        h += `<label class="barrier-label"><input type="checkbox" ${bChk} onchange="toggleCauseBar(${c.id}, '${b.replace(/'/g,"\\'")}')"> <span>${b}</span></label>`;
+      });
+      h += `    <input type="text" class="minimal-input" placeholder="+ ระบุด่านกั้นอื่นๆ..." value="${cData.otherBar}" oninput="fState.causeMap[${c.id}].otherBar=this.value">
+                <input type="text" class="minimal-input" placeholder="+ มาตรการแก้ไข / แนวทางป้องกัน..." value="${cData.sol}" oninput="fState.causeMap[${c.id}].sol=this.value" style="color:#059669; font-weight:bold;">
+              </div>
+            </div>`;
     });
     h += `</div></div>`;
   }
@@ -670,14 +683,13 @@ function renderMultiFactorForm() {
 }
 
 function toggleCauseCheck(cId, isChecked) {
-  if(isChecked) fState.causeMap[cId] = { checked: true, bars: [], otherBar: '', sol: '' };
-  else delete fState.causeMap[cId];
+  if(isChecked) fState.causeMap[cId] = { checked: true, bars: [], otherBar: '', sol: '' }; else delete fState.causeMap[cId];
   renderMultiFactorForm();
 }
 function toggleCauseBar(cId, barStr) {
   let bars = fState.causeMap[cId].bars; let idx = bars.indexOf(barStr);
   if(idx > -1) bars.splice(idx,1); else bars.push(barStr);
-  renderMultiFactorForm(); // Re-render is fast enough
+  renderMultiFactorForm();
 }
 
 function saveMultiFactors() {
@@ -688,17 +700,11 @@ function saveMultiFactors() {
   selectedIds.forEach(id => {
     let cDef = rcaDatabase.causes.find(x => x.id === parseInt(id));
     let cData = fState.causeMap[id];
-    let bars = cData.bars.slice();
-    newFactors.push({ tier: fState.tier, groupId: fState.group, causeId: cDef.id, cause: cDef.thai, barriers: bars, otherBarrier: cData.otherBar, solution: cData.sol });
+    newFactors.push({ tier: fState.tier, groupId: fState.group, causeId: cDef.id, cause: cDef.thai, barriers: cData.bars.slice(), otherBarrier: cData.otherBar, solution: cData.sol });
   });
 
-  if(fState.isEditMode) {
-    // If editing, replace the old factor with the new one(s)
-    data.flows[fState.fIdx].acts[fState.aIdx].factors.splice(fState.editFacIdx, 1, ...newFactors);
-  } else {
-    // Append all selected
-    data.flows[fState.fIdx].acts[fState.aIdx].factors.push(...newFactors);
-  }
+  if(fState.isEditMode) { data.flows[fState.fIdx].acts[fState.aIdx].factors.splice(fState.editFacIdx, 1, ...newFactors); } 
+  else { data.flows[fState.fIdx].acts[fState.aIdx].factors.push(...newFactors); }
   closeAllForms(); renderFlows();
 }
 
@@ -706,17 +712,29 @@ function renderFlows() {
   var html = ''; let fC=0, aC=0;
   for (var i = 0; i < data.flows.length; i++) {
     fC++;
-    html += `<div class="flow-item"><div class="flow-header"><div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div><div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️</button></div></div>`;
+    html += `<div class="flow-item"><div class="flow-header">
+      <div><strong>Step ${i+1}:</strong> ${data.flows[i].name}</div>
+      <div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm" style="background:#eab308;color:white;" onclick="openFlowForm(${i})">✏️ แก้ไข</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Flow นี้?')){data.flows.splice(${i}, 1); renderFlows();}">🗑️ ลบ</button></div>
+    </div>`;
     for (var j = 0; j < data.flows[i].acts.length; j++) {
       var act = data.flows[i].acts[j]; aC++;
-      html += `<div class="unsafe-act"><div class="unsafe-header"><div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div><div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div></div>`;
+      html += `<div class="unsafe-act"><div class="unsafe-header">
+        <div style="color:#92400e;"><strong>Unsafe Act ${j+1}:</strong> ${act.name}</div>
+        <div style="white-space:nowrap; margin-left:10px;"><button class="btn btn-sm btn-primary" onclick="openActForm(${i}, ${j})">✏️</button> <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบ Act นี้?')){data.flows[${i}].acts.splice(${j}, 1); renderFlows();}">🗑️</button></div>
+      </div>`;
       for (var k = 0; k < act.factors.length; k++) {
         var f = act.factors[k];
-        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div style="flex:1;"><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
+        html += `<div class="factor-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div style="flex:1;"><span class="tier-badge tier-${f.tier}">Tier ${f.tier}</span><br><strong>สาเหตุ:</strong> ${f.cause}<br>`;
+        
         let allBars = (f.barriers||[]).slice(); if(f.otherBarrier) allBars.push(f.otherBarrier);
         if (allBars.length > 0) html += `<div style="font-size:12px; color:#991b1b; margin-top:4px;">ด่านกั้นล้มเหลว: ${allBars.map(b=>`<span class="barrier-tag">${b}</span>`).join('')}</div>`;
         if (f.solution) html += `<div class="solution-box"><strong>มาตรการ:</strong> ${f.solution}</div>`;
-        html += `</div><div style="white-space:nowrap; margin-left:10px; display:flex; flex-direction:column; gap:5px;"><button class="btn btn-sm btn-warning" onclick="openFactorForm(${i}, ${j}, ${k})">✏️</button><button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">🗑️</button></div></div></div>`;
+        
+        html += `</div><div style="white-space:nowrap; margin-left:10px; display:flex; flex-direction:column; gap:5px;">
+          <button class="btn btn-sm btn-warning" onclick="openFactorForm(${i}, ${j}, ${k})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="if(confirm('ลบปัจจัย?')){data.flows[${i}].acts[${j}].factors.splice(${k},1); renderFlows();}">🗑️</button>
+        </div></div></div>`;
       }
       html += `<button class="btn btn-sm btn-purple" style="margin-top:8px;" onclick="openFactorForm(${i}, ${j})">➕ เพิ่มปัจจัยเชิงระบบ</button></div>`;
     }
@@ -726,10 +744,8 @@ function renderFlows() {
   document.getElementById('visualizeBtn').style.display = fC > 0 ? 'inline-block' : 'none';
 }
 
-function visualizeDiagram() { visualizeDiagramFromData(data.flows, document.getElementById('rcaIncNo').value, document.getElementById('rcaDesc').value); }
-function openDiagramWindow(flows, incNo, desc) { visualizeDiagramFromData(flows, incNo, desc); }
-
-function visualizeDiagramFromData(flowsData, incNo, desc) {
+function visualizeDiagram() { openDiagramWindow(data.flows, document.getElementById('rcaIncNo').value, document.getElementById('rcaDesc').value); }
+function openDiagramWindow(flowsData, incNo, desc) {
   if(!flowsData || flowsData.length === 0) return alert('ยังไม่มีข้อมูล Flow');
   var win = window.open('', 'Diagram', 'width=1400,height=900');
   let columns = []; let flowRowHtml = `<td class="label-cell" style="color:#1f2937;">Flow of Steps</td>`;
@@ -751,6 +767,7 @@ function visualizeDiagramFromData(flowsData, incNo, desc) {
     </table></div><div style="text-align: center; margin-top: 30px;"><button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">🖨️ สั่งพิมพ์ (Print)</button></div></body></html>`;
   win.document.write(html); win.document.close();
 }
+
 function getFactorsHTML(factors, targetTier, colorHex) { 
   return factors.filter(f => f.tier === targetTier).map(f => {
     let allBars = (f.barriers||[]).slice(); if(f.otherBarrier) allBars.push(f.otherBarrier);
